@@ -58,12 +58,14 @@ The package is not published to npm (`"private": true`); install it from the dir
 
 ```bash
 # in your project
-pnpm dev          # for example, http://localhost:3000
+pnpm dev          # your dev server prints its URL, e.g. http://localhost:5173
 ```
 
 Then tell the agent:
 
-> Open http://localhost:3000 and check the login page. If the submit button is misaligned, fix it.
+> Open the URL your dev server printed (for example http://localhost:5173) and check the login page. If the submit button is misaligned, fix it.
+
+`3000`, `5173`, and `8080` are only examples. The cockpit accepts any URL or port, and it remembers the last address you opened, so a project on 5173 or 8080 does not need retyping every session.
 
 The right tab opens with the live page; the agent reads the outline, clicks, types, and returns with a screenshot and console errors. You can close the tab and keep talking — the pill above the composer keeps you posted.
 

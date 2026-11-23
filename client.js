@@ -437,6 +437,24 @@ window.__ModuleLoader__.load({
     }
 
     const TAB_DISMISS_PREFIX = 'dsh.browser-control.tab-dismissed.'
+    const LAST_URL_KEY = 'dsh.browser-cockpit.last-url'
+
+    /** The last page opened from the cockpit, so other ports do not need retyping. */
+    function readLastUrl() {
+      try {
+        return localStorage.getItem(LAST_URL_KEY) ?? ''
+      } catch {
+        return ''
+      }
+    }
+
+    function rememberLastUrl(url) {
+      try {
+        if (typeof url === 'string' && url !== '' && url !== 'about:blank') localStorage.setItem(LAST_URL_KEY, url)
+      } catch {
+        // Private-mode storage may refuse writes; the address simply is not remembered.
+      }
+    }
 
     /** How many live-tab bodies are currently on screen; one when the tab is visible. */
     let mountedBrowserTabs = 0
@@ -859,7 +877,7 @@ window.__ModuleLoader__.load({
       const [frameUrl, setFrameUrl] = useState(null)
       const [frameAt, setFrameAt] = useState(0)
       const [now, setNow] = useState(Date.now())
-      const [address, setAddress] = useState('')
+      const [address, setAddress] = useState(() => readLastUrl())
       const [busyAction, setBusyAction] = useState(null)
       const [notice, setNotice] = useState(null)
       const [offline, setOffline] = useState(false)
@@ -889,6 +907,7 @@ window.__ModuleLoader__.load({
             // Follow the page the agent navigated to, unless the human is editing the address.
             if (typeof next.url === 'string' && next.url !== '' && next.url !== 'about:blank' && !addressEdited.current) {
               setAddress(next.url)
+              rememberLastUrl(next.url)
             }
           } catch {
             if (!alive) return
@@ -1010,6 +1029,7 @@ window.__ModuleLoader__.load({
           if (typeof payload.state?.url === 'string' && payload.state.url !== '' && payload.state.url !== 'about:blank') {
             addressEdited.current = false
             setAddress(payload.state.url)
+            rememberLastUrl(payload.state.url)
           }
         } catch (error) {
           const detail = error instanceof Error ? error.message : String(error)
