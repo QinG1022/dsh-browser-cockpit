@@ -63,7 +63,7 @@ pnpm dev          # your dev server prints its URL, e.g. http://localhost:5173
 
 Then tell the agent:
 
-> Open the URL your dev server printed (for example http://localhost:5173) and check the login page. If the submit button is misaligned, fix it.
+> Open the URL your dev server printed (for example `http://localhost:5173`) and check the login page. If the submit button is misaligned, fix it.
 
 `3000`, `5173`, and `8080` are only examples. The cockpit accepts any URL or port, and it remembers the last address you opened, so a project on 5173 or 8080 does not need retyping every session.
 
