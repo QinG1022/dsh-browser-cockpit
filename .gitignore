@@ -1,0 +1,11 @@
+node_modules/
+.npm/
+*.log
+*.tmp
+.DS_Store
+Thumbs.db
+
+# Local test output and screenshots
+dev-check/evidence/
+dev-check/out*.txt
+dev-check/*.png

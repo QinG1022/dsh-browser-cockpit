@@ -1,0 +1,6 @@
+{
+  "meta": {
+    "title": "Browser cockpit",
+    "description": "Lets the agent drive a local Chrome window and inspect a running web project itself: open a URL, read the page outline, take screenshots, click, type, resize, and collect console errors. The Browser entry in the left sidebar shows the same live view and can open an address, reload, switch the viewport, and close the browser by hand; the view itself is read-only. The first browser action in a session opens a Browser tab beside the conversation automatically (live view plus activity; the window icon in the session header opens it too). After you close that tab, a status strip above the composer shows \"Agent now: …\" or \"Just now: …\" with a thumbnail and a View button. The browser starts on first use with its own profile at ~/.dsh/browser-control/profile (no cookies from your everyday browser), and the panel is served on the local Harness port only."
+  }
+}
