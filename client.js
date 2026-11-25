@@ -96,6 +96,9 @@ window.__ModuleLoader__.load({
       'act.dialogDismiss': 'Dismiss dialog',
       'act.hover': 'Hover {target}',
       'act.drag': 'Drag {from} → {to}',
+      'act.fill-form': 'Fill {count} fields',
+      'act.select': 'Select {target}',
+      'act.upload': 'Upload {count} files',
       'act.scroll': 'Scroll {direction}',
       'act.eval': 'Run a page script',
       'act.read-console': 'Read the console',
@@ -185,6 +188,9 @@ window.__ModuleLoader__.load({
       'act.dialogDismiss': '取消对话框',
       'act.hover': '悬停 {target}',
       'act.drag': '拖动 {from} → {to}',
+      'act.fill-form': '填写 {count} 个字段',
+      'act.select': '选择 {target}',
+      'act.upload': '上传 {count} 个文件',
       'act.scroll': '滚动 {direction}',
       'act.eval': '执行页面脚本',
       'act.read-console': '读取控制台',
@@ -396,6 +402,12 @@ window.__ModuleLoader__.load({
             from: shorten(detail.from, 16) || '—',
             to: shorten(detail.to, 16) || '—',
           })
+        case 'fill-form':
+          return t('act.fill-form', { count: detail.count ?? 0 })
+        case 'select':
+          return t('act.select', { target: shorten(detail.target, 20) || '—' })
+        case 'upload':
+          return t('act.upload', { count: detail.count ?? 0 })
         case 'dialog':
           return detail.accept === true ? t('act.dialogAccept') : t('act.dialogDismiss')
         case 'scroll':
