@@ -138,7 +138,7 @@ Environment fallbacks: `DSH_BROWSER_PATH` and `DSH_BROWSER_PROFILE`.
 - New tabs and windows opened by the page are not followed; cross-origin iframe internals are not inspectable.
 - Chrome's native `<select>` popups and OS dialogs are outside the page and cannot be driven. JavaScript alert/confirm/prompt are handled: dismissed by default, accepted with `dialogBehavior: accept`, or answered with `browser_handle_dialog` under `manual`.
 - The right tab only renders in the conversation view; switching to another main panel hides the right column (the pill returns when you are back).
-- The activity feed is shared by the whole process (there is one browser); the panel shows everything, while the tab and pill filter to the current session.
+- The activity feed is shared by the whole process (there is one browser); the left panel shows everything, while the tab and pill show only actions attributed to the current session. Panel/CLI actions carry no session id and appear only in the left panel.
 - The right tab appears automatically once per session; a session where you closed it stays quiet.
 - Screenshots are capped at 1600 px on the long side for the agent and 480 px for activity thumbnails.
 

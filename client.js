@@ -673,7 +673,9 @@ window.__ModuleLoader__.load({
         ? `${statusLabel} · ${frameAge < FRESH_MS ? t('stage.live') : t('stage.paused')}`
         : statusLabel
       const sessionId = typeof props.sessionId === 'string' ? props.sessionId : null
-      const belongs = (entry) => sessionId === null || entry.sessionId === sessionId || entry.sessionId === null || entry.sessionId === undefined
+      // Panel/CLI actions carry no session id; including them would leak one
+      // conversation's activity into every tab and pill.
+      const belongs = (entry) => typeof sessionId === 'string' && entry.sessionId === sessionId
       const relevant = feed.activity.filter(belongs)
       const currentHere = feed.current !== null && belongs(feed.current) ? feed.current : null
       const newest = relevant.length > 0 ? relevant[0] : null
@@ -822,7 +824,9 @@ window.__ModuleLoader__.load({
         }
       }, [])
 
-      const belongs = (entry) => sessionId === null || entry.sessionId === sessionId || entry.sessionId === null || entry.sessionId === undefined
+      // Panel/CLI actions carry no session id; including them would leak one
+      // conversation's activity into every tab and pill.
+      const belongs = (entry) => typeof sessionId === 'string' && entry.sessionId === sessionId
       const currentHere = current !== null && belongs(current) ? current : null
       const relevant = activity.filter(belongs)
       const newest = relevant.length > 0 ? relevant[0] : null
