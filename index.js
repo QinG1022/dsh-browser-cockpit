@@ -8,6 +8,7 @@
  * - `width` / `height`: initial viewport; defaults to 1440x900.
  * - `profileDir`: Chrome profile directory; defaults to ~/.dsh/browser-control/profile.
  * - `dialogBehavior`: `dismiss` (default), `accept`, or `manual` for JavaScript dialogs.
+ * - `followNewTabs`: `false` disables switching to tabs opened by the current page.
  * @module dsh-browser-cockpit
  */
 
@@ -22,7 +23,7 @@ export const inject = ['tools']
 /**
  * Activate the plugin: one browser session, its tools, and its panel routes.
  * @param {object} ctx - the host plugin context.
- * @param {{ browserPath?: string, headless?: boolean, width?: number, height?: number, profileDir?: string, dialogBehavior?: 'dismiss' | 'accept' | 'manual' }} [config] - row configuration.
+ * @param {{ browserPath?: string, headless?: boolean, width?: number, height?: number, profileDir?: string, dialogBehavior?: 'dismiss' | 'accept' | 'manual', followNewTabs?: boolean }} [config] - row configuration.
  */
 export function apply(ctx, config = {}) {
   const settings = config !== null && typeof config === 'object' ? config : {}
@@ -33,6 +34,7 @@ export function apply(ctx, config = {}) {
     height: typeof settings.height === 'number' ? settings.height : undefined,
     profileDir: typeof settings.profileDir === 'string' ? settings.profileDir : undefined,
     dialogBehavior: typeof settings.dialogBehavior === 'string' ? settings.dialogBehavior : undefined,
+    followNewTabs: settings.followNewTabs !== false,
   })
 
   ctx.effect(() => () => {

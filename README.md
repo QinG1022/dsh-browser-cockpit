@@ -13,7 +13,7 @@ Agents are good at reading source code and bad at seeing a running interface. Th
 
 ## What you get
 
-- **18 browser tools** for the agent: open, snapshot, wait, handle dialog, click, hover, drag, type, fill form, select, upload, key, scroll, eval, console, screenshot, resize, close.
+- **19 browser tools** for the agent: open, tabs, snapshot, wait, handle dialog, click, hover, drag, type, fill form, select, upload, key, scroll, eval, console, screenshot, resize, close.
 - **Live view** in the right sidebar, side by side with the conversation, refreshed about every 1.3 seconds.
 - **Activity log** — every action with its time, duration, result, page, new page errors, and a thumbnail you can enlarge.
 - **Auto-open**: the right tab appears on the agent's first browser action in a session; close it and a status pill takes over.
@@ -93,6 +93,7 @@ Closing the right tab is remembered for that session, so it will not pop open ag
 | `browser_fill_form` | Fill several text fields in one call from a JSON field list. |
 | `browser_select` | Choose a native `<select>` option by value, label, or index. |
 | `browser_upload_file` | Set files on a file input from absolute paths. |
+| `browser_tabs` | List, open, switch, and close pages. |
 | `browser_key` | Send a key or chord (`Enter`, `Tab`, `Control+A`, …). |
 | `browser_wait_for` | Wait for visible text, a selector, a URL, or network idle before acting. |
 | `browser_handle_dialog` | Answer a waiting JavaScript alert/confirm/prompt when `dialogBehavior` is `manual`. |
@@ -124,7 +125,8 @@ Values can be set on the plugin's bundle row (a matching row override replaces i
 | `headless` | `true` | `false` shows the browser window instead of hiding it. |
 | `width`, `height` | `1440`, `900` | Initial viewport. |
 | `profileDir` | `~/.dsh/browser-control/profile` | Persistent Chrome profile. |
-| `dialogBehavior` | `dismiss` | JavaScript alert/confirm/prompt handling: `dismiss`, `accept`, or `manual`. `beforeunload` is always accepted.
+| `dialogBehavior` | `dismiss` | JavaScript alert/confirm/prompt handling: `dismiss`, `accept`, or `manual`. `beforeunload` is always accepted. |
+| `followNewTabs` | `true` | Switch to a new tab opened by the current page. |
 
 Environment fallbacks: `DSH_BROWSER_PATH` and `DSH_BROWSER_PROFILE`.
 
@@ -139,8 +141,8 @@ Environment fallbacks: `DSH_BROWSER_PATH` and `DSH_BROWSER_PROFILE`.
 
 ## Limitations
 
-- One controlled page per Harness process.
-- New tabs and windows opened by the page are not followed; cross-origin iframe internals are not inspectable.
+- One current page per Harness process; other tabs stay open and can be selected.
+- New tabs opened by the current page are followed by default; set `followNewTabs: false` to stay put. Cross-origin iframe internals are not inspectable.
 - Drag is a mouse-button drag; native HTML5 drag-and-drop may not fire drag events.
 - Chrome's native `<select>` popups and OS dialogs are outside the page and cannot be driven. JavaScript alert/confirm/prompt are handled: dismissed by default, accepted with `dialogBehavior: accept`, or answered with `browser_handle_dialog` under `manual`.
 - The right tab only renders in the conversation view; switching to another main panel hides the right column (the pill returns when you are back).
