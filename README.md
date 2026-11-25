@@ -164,7 +164,7 @@ docs/               Architecture artwork
 | Symptom | Fix |
 |---|---|
 | `no Chrome or Edge executable was found` | Install Chrome/Edge, or set `browserPath`. |
-| `the browser exited immediately` | Another Chrome uses the same profile; close it or set a different `profileDir`. |
+| `the browser exited immediately` | A leftover controlled Chrome held the profile. Recent versions adopt it and keep its page; if that fails, close Chrome processes using this profile or set a different `profileDir`. |
 | `timed out waiting for the browser debugging port` | Close leftover Chrome windows that use this profile. |
 | Sidebar entry missing after install | Refresh the DSH window once. |
 | Right tab does not open automatically | The tab was closed in this session (by design); use the header icon or the pill's *View*. |

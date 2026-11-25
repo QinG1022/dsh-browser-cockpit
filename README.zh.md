@@ -164,7 +164,7 @@ docs/               架构图
 | 现象 | 处理 |
 |---|---|
 | `no Chrome or Edge executable was found` | 安装 Chrome/Edge，或配置 `browserPath`。 |
-| `the browser exited immediately` | 已有 Chrome 占用了同一配置目录；关闭它或换 `profileDir`。 |
+| `the browser exited immediately` | 上次异常退出遗留的受控 Chrome 占用了 profile。新版会尝试接管并保留原页面；仍失败时，关闭使用该 profile 的 Chrome，或换 `profileDir`。 |
 | `timed out waiting for the browser debugging port` | 关掉使用该配置目录的遗留 Chrome 窗口。 |
 | 安装后侧栏没有入口 | 刷新一次 DSH 窗口。 |
 | 右侧栏标签不自动打开 | 这个会话里你关过它（设计如此）；用标题栏图标或胶囊「查看画面」。 |
