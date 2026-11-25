@@ -13,7 +13,7 @@ Agents are good at reading source code and bad at seeing a running interface. Th
 
 ## What you get
 
-- **13 browser tools** for the agent: open, snapshot, wait, handle dialog, click, type, key, scroll, eval, console, screenshot, resize, close.
+- **15 browser tools** for the agent: open, snapshot, wait, handle dialog, click, hover, drag, type, key, scroll, eval, console, screenshot, resize, close.
 - **Live view** in the right sidebar, side by side with the conversation, refreshed about every 1.3 seconds.
 - **Activity log** — every action with its time, duration, result, page, new page errors, and a thumbnail you can enlarge.
 - **Auto-open**: the right tab appears on the agent's first browser action in a session; close it and a status pill takes over.
@@ -86,7 +86,9 @@ Closing the right tab is remembered for that session, so it will not pop open ag
 |---|---|
 | `browser_open` | Open a URL and return the page outline, visible text, and a screenshot. Starts Chrome on first use. |
 | `browser_snapshot` | Re-read the current page: interactive element refs, visible text, screenshot. |
-| `browser_click` | Click an element by snapshot ref or CSS selector. |
+| `browser_click` | Click an element by ref/selector, or a viewport point by x/y; left/right/middle buttons and 1–3 clicks. |
+| `browser_hover` | Move the mouse over an element to open menus or tooltips. |
+| `browser_drag` | Drag from one element to another with the left mouse button. |
 | `browser_type` | Focus a field, replace its content, optionally press Enter. |
 | `browser_key` | Send a key or chord (`Enter`, `Tab`, `Control+A`, …). |
 | `browser_wait_for` | Wait for visible text, a selector, a URL, or network idle before acting. |
@@ -136,6 +138,7 @@ Environment fallbacks: `DSH_BROWSER_PATH` and `DSH_BROWSER_PROFILE`.
 
 - One controlled page per Harness process.
 - New tabs and windows opened by the page are not followed; cross-origin iframe internals are not inspectable.
+- Drag is a mouse-button drag; native HTML5 drag-and-drop may not fire drag events.
 - Chrome's native `<select>` popups and OS dialogs are outside the page and cannot be driven. JavaScript alert/confirm/prompt are handled: dismissed by default, accepted with `dialogBehavior: accept`, or answered with `browser_handle_dialog` under `manual`.
 - The right tab only renders in the conversation view; switching to another main panel hides the right column (the pill returns when you are back).
 - The activity feed is shared by the whole process (there is one browser); the left panel shows everything, while the tab and pill show only actions attributed to the current session. Panel/CLI actions carry no session id and appear only in the left panel.

@@ -94,6 +94,8 @@ window.__ModuleLoader__.load({
       'act.waitNetwork': 'network idle',
       'act.dialogAccept': 'Accept dialog',
       'act.dialogDismiss': 'Dismiss dialog',
+      'act.hover': 'Hover {target}',
+      'act.drag': 'Drag {from} → {to}',
       'act.scroll': 'Scroll {direction}',
       'act.eval': 'Run a page script',
       'act.read-console': 'Read the console',
@@ -181,6 +183,8 @@ window.__ModuleLoader__.load({
       'act.waitNetwork': '网络空闲',
       'act.dialogAccept': '接受对话框',
       'act.dialogDismiss': '取消对话框',
+      'act.hover': '悬停 {target}',
+      'act.drag': '拖动 {from} → {to}',
       'act.scroll': '滚动 {direction}',
       'act.eval': '执行页面脚本',
       'act.read-console': '读取控制台',
@@ -385,6 +389,13 @@ window.__ModuleLoader__.load({
           if (detail.networkIdle === true) parts.push(t('act.waitNetwork'))
           return t('act.wait', { target: parts.join(' + ') || '—' })
         }
+        case 'hover':
+          return t('act.hover', { target: shorten(detail.target, 24) || '—' })
+        case 'drag':
+          return t('act.drag', {
+            from: shorten(detail.from, 16) || '—',
+            to: shorten(detail.to, 16) || '—',
+          })
         case 'dialog':
           return detail.accept === true ? t('act.dialogAccept') : t('act.dialogDismiss')
         case 'scroll':
