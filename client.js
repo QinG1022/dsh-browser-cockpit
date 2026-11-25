@@ -90,6 +90,8 @@ window.__ModuleLoader__.load({
       'act.type': 'Type “{text}”',
       'act.typeInto': 'Type “{text}” into “{target}”',
       'act.key': 'Press {key}',
+      'act.wait': 'Wait for {target}',
+      'act.waitNetwork': 'network idle',
       'act.scroll': 'Scroll {direction}',
       'act.eval': 'Run a page script',
       'act.read-console': 'Read the console',
@@ -173,6 +175,8 @@ window.__ModuleLoader__.load({
       'act.type': '输入「{text}」',
       'act.typeInto': '在「{target}」输入「{text}」',
       'act.key': '按键 {key}',
+      'act.wait': '等待 {target}',
+      'act.waitNetwork': '网络空闲',
       'act.scroll': '滚动 {direction}',
       'act.eval': '执行页面脚本',
       'act.read-console': '读取控制台',
@@ -369,6 +373,14 @@ window.__ModuleLoader__.load({
             : t('act.type', { text: shorten(detail.text, 24) })
         case 'key':
           return t('act.key', { key: shorten(detail.key, 14) || '—' })
+        case 'wait': {
+          const parts = []
+          if (typeof detail.text === 'string' && detail.text !== '') parts.push(`“${shorten(detail.text, 24)}”`)
+          if (typeof detail.selector === 'string' && detail.selector !== '') parts.push(shorten(detail.selector, 24))
+          if (typeof detail.url === 'string' && detail.url !== '') parts.push(shorten(detail.url, 24))
+          if (detail.networkIdle === true) parts.push(t('act.waitNetwork'))
+          return t('act.wait', { target: parts.join(' + ') || '—' })
+        }
         case 'scroll':
           return t('act.scroll', { direction: String(detail.direction ?? 'down') })
         case 'eval':

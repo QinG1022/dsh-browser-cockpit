@@ -13,7 +13,7 @@ Agents are good at reading source code and bad at seeing a running interface. Th
 
 ## What you get
 
-- **11 browser tools** for the agent: open, snapshot, click, type, key, scroll, eval, console, screenshot, resize, close.
+- **12 browser tools** for the agent: open, snapshot, wait, click, type, key, scroll, eval, console, screenshot, resize, close.
 - **Live view** in the right sidebar, side by side with the conversation, refreshed about every 1.3 seconds.
 - **Activity log** — every action with its time, duration, result, page, new page errors, and a thumbnail you can enlarge.
 - **Auto-open**: the right tab appears on the agent's first browser action in a session; close it and a status pill takes over.
@@ -89,6 +89,7 @@ Closing the right tab is remembered for that session, so it will not pop open ag
 | `browser_click` | Click an element by snapshot ref or CSS selector. |
 | `browser_type` | Focus a field, replace its content, optionally press Enter. |
 | `browser_key` | Send a key or chord (`Enter`, `Tab`, `Control+A`, …). |
+| `browser_wait_for` | Wait for visible text, a selector, a URL, or network idle before acting. |
 | `browser_scroll` | Scroll the page or bring an element into view. |
 | `browser_eval` | Evaluate JavaScript in the page and return the JSON value. |
 | `browser_console` | Recent console messages, uncaught errors, and failed requests. |
