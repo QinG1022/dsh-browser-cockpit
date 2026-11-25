@@ -13,7 +13,7 @@
 
 ## 功能
 
-- **12 个浏览器工具**：打开、读页面、等待、点击、输入、按键、滚动、执行脚本、读控制台、截图、切视口、关闭。
+- **13 个浏览器工具**：打开、读页面、等待、处理对话框、点击、输入、按键、滚动、执行脚本、读控制台、截图、切视口、关闭。
 - **实时画面**：右侧栏与对话并排，约 1.3 秒刷新一次。
 - **操作记录**：每一步的时间、耗时、结果、页面、新增报错，并附可放大的缩略图。
 - **自动打开**：会话里第一次操作浏览器时右侧栏自动展开；关掉后由状态胶囊接管。
@@ -90,6 +90,7 @@ pnpm dev          # 终端会打印地址，例如 http://localhost:5173
 | `browser_type` | 聚焦输入框、替换内容，可选回车提交。 |
 | `browser_key` | 发送按键或组合键（`Enter`、`Tab`、`Control+A` 等）。 |
 | `browser_wait_for` | 等待可见文本、选择器、URL 或网络空闲后再操作。 |
+| `browser_handle_dialog` | 在 `dialogBehavior` 为 `manual` 时处理等待中的 alert/confirm/prompt。 |
 | `browser_scroll` | 滚动页面，或把元素滚入视野。 |
 | `browser_eval` | 在页面里执行 JavaScript 并返回 JSON 值。 |
 | `browser_console` | 最近的控制台消息、未捕获异常和失败请求。 |
@@ -118,6 +119,7 @@ pnpm dev          # 终端会打印地址，例如 http://localhost:5173
 | `headless` | `true` | `false` 时显示浏览器窗口。 |
 | `width`、`height` | `1440`、`900` | 初始视口。 |
 | `profileDir` | `~/.dsh/browser-control/profile` | 持久化的 Chrome 配置目录。 |
+| `dialogBehavior` | `dismiss` | JavaScript alert/confirm/prompt 的处理方式：`dismiss`、`accept` 或 `manual`；`beforeunload` 始终接受。 |
 
 环境变量回退：`DSH_BROWSER_PATH`、`DSH_BROWSER_PROFILE`。
 
@@ -134,7 +136,7 @@ pnpm dev          # 终端会打印地址，例如 http://localhost:5173
 
 - 每个 Harness 进程只控制一个页面。
 - 不跟随页面打开的新标签页/新窗口；跨域 iframe 内部无法检查。
-- Chrome 原生 `<select>` 弹层和系统对话框不在页面里，无法驱动。
+- Chrome 原生 `<select>` 弹层和系统对话框不在页面里，无法驱动。JavaScript alert/confirm/prompt 已处理：默认取消，`dialogBehavior: accept` 接受，`manual` 时用 `browser_handle_dialog` 回答。
 - 右侧栏标签只在对话视图显示；切到其他主面板时右栏隐藏（回来后会恢复）。
 - 操作记录是整个进程共享的（浏览器只有一个）：左侧面板显示全部，右侧栏和胶囊按当前会话过滤。
 - 右侧栏标签每个会话自动打开一次；被你关掉的会话不会再自动弹出。
