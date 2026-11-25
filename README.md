@@ -84,7 +84,7 @@ Closing the right tab is remembered for that session, so it will not pop open ag
 
 | Tool | Purpose |
 |---|---|
-| `browser_open` | Open a URL and return the page outline, visible text, and a screenshot. Starts Chrome on first use. |
+| `browser_open` | Open a URL and return the page outline, visible text, and a screenshot. Starts Chrome on first use; `waitUntil` and `timeoutMs` control the navigation wait. |
 | `browser_snapshot` | Re-read the page: refs with control state, visible text, screenshot; `interactiveOnly` for a compact action list. |
 | `browser_click` | Click an element by ref/selector, or a viewport point by x/y; left/right/middle buttons and 1–3 clicks. |
 | `browser_hover` | Move the mouse over an element to open menus or tooltips. |

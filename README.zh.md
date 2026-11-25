@@ -84,7 +84,7 @@ pnpm dev          # 终端会打印地址，例如 http://localhost:5173
 
 | 工具 | 用途 |
 |---|---|
-| `browser_open` | 打开地址并返回页面结构、可见文本和截图；首次调用会启动 Chrome。 |
+| `browser_open` | 打开地址并返回页面结构、可见文本和截图；首次调用会启动 Chrome，`waitUntil`、`timeoutMs` 控制导航等待。 |
 | `browser_snapshot` | 重新读取页面：带控件状态的引用、可见文本、截图；`interactiveOnly` 返回紧凑操作列表。 |
 | `browser_click` | 按 ref/选择器点击元素，或用 x/y 点击视口坐标；支持左/右/中键和 1–3 次点击。 |
 | `browser_hover` | 把鼠标移到元素上，展开菜单或提示。 |
