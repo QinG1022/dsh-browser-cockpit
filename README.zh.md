@@ -153,7 +153,7 @@ pnpm dev          # 终端会打印地址，例如 http://localhost:5173
 ## 安全与隐私
 
 - 受控 Chrome 使用**独立配置目录**，不读取你日常浏览器的 Cookie；该目录会持久保存，因此你在其中登录过的站点重启后仍然有效。
-- 面板路由只由本地 Harness Web 服务提供（`127.0.0.1`）。`GET state/activity/frame/thumb` 在回环地址上不需要认证；`POST action` 要求同源 JSON 请求。不要把 Harness 端口暴露到网络。
+- 面板路由只由本地 Harness Web 服务提供（`127.0.0.1`）。非回环 `Host` 和跨源 `Sec-Fetch-Site` 请求会直接返回 403；`POST action` 还要求同源 JSON 请求。不要把 Harness 端口暴露到网络。
 - 打开 Harness 自身地址时，插件会用进程 token 让受控 Chrome 登录一次，然后从地址栏移除 token；token 不会写进操作记录。
 - 智能体可以在受控页面里执行任意 JavaScript（`browser_eval`），也可以打开 `file://` 地址。只把它用在你打算检查的页面上。
 - 网络请求头中的 `authorization`、`cookie`、`set-cookie`、`proxy-authorization` 和 API key/token 类字段会打码；响应体只在请求时读取，并限制长度。其余请求数据仍来自你打开的页面，按敏感信息对待。

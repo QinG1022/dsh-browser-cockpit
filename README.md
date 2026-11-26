@@ -153,7 +153,7 @@ Environment fallbacks: `DSH_BROWSER_PATH` and `DSH_BROWSER_PROFILE`.
 ## Security and privacy
 
 - The controlled Chrome uses **its own profile**; it does not read cookies from your everyday browser. That profile is persistent, so logins you perform there survive restarts.
-- Panel routes are served by the local Harness web server only (`127.0.0.1`). `GET state/activity/frame/thumb` are unauthenticated on loopback; `POST action` requires a same-origin JSON request. Do not expose the Harness port to a network.
+- Panel routes are served by the local Harness web server only (`127.0.0.1`). They reject non-loopback `Host` headers and cross-site `Sec-Fetch-Site` requests (403); `POST action` additionally requires a same-origin JSON request. Do not expose the Harness port to a network.
 - Opening the Harness URL itself signs the controlled Chrome in with the process token, then removes the token from the address bar; the token is not written to the activity log.
 - The agent can run arbitrary JavaScript in the controlled page (`browser_eval`) and open `file://` URLs. Use it only for pages you intend to inspect.
 - Network headers are redacted for `authorization`, `cookie`, `set-cookie`, `proxy-authorization`, and API-key/token headers; bodies are bounded and returned only when you ask for them. Other request data still comes from the page you opened, so treat it as sensitive.
