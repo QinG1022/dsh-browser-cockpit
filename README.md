@@ -17,6 +17,8 @@ Agents are good at reading source code and bad at seeing a running interface. Th
 - **Debug depth**: request list/detail with redacted credentials, computed and matched CSS, single-element screenshots, device/network emulation, and lightweight LCP/CLS/INP/long-task timings.
 - **Page control**: highlight an element for a human, mock or fail network requests, inspect cookies and local/session storage, collect downloads, and close an idle browser automatically.
 - **Stable targeting**: snapshot boxes, depth limits, and locators such as `role=button[name="Save"]`, `text=Save`, `label=Email`, `testid=search`, plus deterministic `browser_assert` checks.
+- **Actionable failures**: a failed tool call ends with a `Next:` suggestion — fresh snapshot for stale refs, a narrower locator, `allowFileUrls`/`allowedHosts`, a dialog handler, a timeout change, or `browser_console`/`browser_network` for the cause.
+- **Bounded output**: snapshot line/node caps, a 6k-character default for `browser_eval`, truncated network bodies, and console/eval markers instead of dumping huge values into the conversation.
 - **Live view** in the right sidebar, side by side with the conversation, streamed over SSE with a JPEG polling fallback.
 - **Activity log** — every action with its time, duration, result, page, new page errors, and a thumbnail you can enlarge.
 - **Auto-open**: the right tab appears on the agent's first browser action in a session; close it and a status pill takes over.
@@ -211,8 +213,9 @@ docs/               Architecture artwork
 ```
 
 - No build step and no npm dependencies.
-- `node --check <file>` validates syntax.
-- `node dev-check/tools-schema.mjs` checks that every tool reaches DSH as an object-rooted JSON Schema.
+- `npm run check` validates syntax for the Host, client, and every `lib/` module.
+- `npm test` validates the 29 tool schemas and the actionable-error rules.
+- `node dev-check/tools-schema.mjs` can be run directly; GitHub Actions runs `npm run check` and `npm test` on Node 22.
 - Standalone smoke scripts are kept in a local scratch directory during development, not committed; they launch a headless Chrome against a temporary test page and exercise navigation, snapshot, locators, assertions, network/styles/emulation/performance, highlight/routes/cookies/storage/downloads/idle cleanup, forms, tabs, dialogs, frames, sessions, reconnect, and crash recovery.
 - After editing **Host** files, uninstall and reinstall the bundle (the Loader keeps the previous module generation otherwise). After editing **Client** files, refresh the DSH window. Profile metadata changes need a restart.
 
