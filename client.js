@@ -97,6 +97,11 @@ window.__ModuleLoader__.load({
       'act.styles': 'Inspect element styles',
       'act.emulate': 'Emulate {what}',
       'act.performance': 'Read page performance',
+      'act.highlight': 'Highlight {target}',
+      'act.route': 'Network route: {action} {pattern}',
+      'act.cookies': 'Cookies: {action}',
+      'act.storage': 'Storage: {action}',
+      'act.download': 'Download: {action}',
       'act.dialogAccept': 'Accept dialog',
       'act.dialogDismiss': 'Dismiss dialog',
       'act.hover': 'Hover {target}',
@@ -195,6 +200,11 @@ window.__ModuleLoader__.load({
       'act.styles': '检查元素样式',
       'act.emulate': '模拟 {what}',
       'act.performance': '读取页面性能',
+      'act.highlight': '高亮 {target}',
+      'act.route': '网络路由：{action} {pattern}',
+      'act.cookies': 'Cookie：{action}',
+      'act.storage': '存储：{action}',
+      'act.download': '下载：{action}',
       'act.dialogAccept': '接受对话框',
       'act.dialogDismiss': '取消对话框',
       'act.hover': '悬停 {target}',
@@ -424,6 +434,19 @@ window.__ModuleLoader__.load({
         }
         case 'performance':
           return t('act.performance')
+        case 'highlight':
+          return t('act.highlight', { target: shorten(detail.target, 24) || '—' })
+        case 'route':
+          return t('act.route', {
+            action: detail.action ?? 'list',
+            pattern: shorten(detail.urlPattern, 32) || '*',
+          })
+        case 'cookies':
+          return t('act.cookies', { action: detail.action ?? 'list' })
+        case 'storage':
+          return t('act.storage', { action: `${detail.type ?? 'local'} ${detail.action ?? 'list'}` })
+        case 'download':
+          return t('act.download', { action: detail.action ?? 'list' })
         case 'hover':
           return t('act.hover', { target: shorten(detail.target, 24) || '—' })
         case 'drag':

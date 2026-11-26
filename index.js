@@ -9,6 +9,9 @@
  * - `profileDir`: Chrome profile directory; defaults to ~/.dsh/browser-control/profile.
  * - `dialogBehavior`: `dismiss` (default), `accept`, or `manual` for JavaScript dialogs.
  * - `followNewTabs`: `false` disables switching to tabs opened by the current page.
+ * - `idleTimeoutMs`: close the browser after this much inactivity; `0` disables (default 5 minutes).
+ * - `downloadDir`: directory for page downloads; defaults to ~/.dsh/browser-control/downloads.
+ * - `secrets`: values to redact from tool output and activity details, as an array or `{ name: { value, domains? } }`.
  * @module dsh-browser-cockpit
  */
 
@@ -23,7 +26,7 @@ export const inject = ['tools']
 /**
  * Activate the plugin: one browser session, its tools, and its panel routes.
  * @param {object} ctx - the host plugin context.
- * @param {{ browserPath?: string, headless?: boolean, width?: number, height?: number, profileDir?: string, dialogBehavior?: 'dismiss' | 'accept' | 'manual', followNewTabs?: boolean }} [config] - row configuration.
+ * @param {{ browserPath?: string, headless?: boolean, width?: number, height?: number, profileDir?: string, dialogBehavior?: 'dismiss' | 'accept' | 'manual', followNewTabs?: boolean, idleTimeoutMs?: number, downloadDir?: string, secrets?: unknown }} [config] - row configuration.
  */
 export function apply(ctx, config = {}) {
   const settings = config !== null && typeof config === 'object' ? config : {}
@@ -35,6 +38,9 @@ export function apply(ctx, config = {}) {
     profileDir: typeof settings.profileDir === 'string' ? settings.profileDir : undefined,
     dialogBehavior: typeof settings.dialogBehavior === 'string' ? settings.dialogBehavior : undefined,
     followNewTabs: settings.followNewTabs !== false,
+    idleTimeoutMs: typeof settings.idleTimeoutMs === 'number' ? settings.idleTimeoutMs : undefined,
+    downloadDir: typeof settings.downloadDir === 'string' ? settings.downloadDir : undefined,
+    secrets: settings.secrets,
   })
 
   ctx.effect(() => () => {

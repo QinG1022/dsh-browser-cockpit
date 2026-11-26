@@ -13,8 +13,9 @@ Agents are good at reading source code and bad at seeing a running interface. Th
 
 ## What you get
 
-- **24 browser tools** for the agent: open, tabs, snapshot, wait, handle dialog, click, hover, drag, type, fill form, select, upload, key, scroll, eval, console, assert, network, styles, emulate, performance, screenshot, resize, close.
+- **29 browser tools** for the agent: open, tabs, snapshot, wait, handle dialog, click, hover, drag, type, fill form, select, upload, key, scroll, eval, console, assert, network, styles, emulate, performance, screenshot, resize, close, highlight, route, cookies, storage, download.
 - **Debug depth**: request list/detail with redacted credentials, computed and matched CSS, single-element screenshots, device/network emulation, and lightweight LCP/CLS/INP/long-task timings.
+- **Page control**: highlight an element for a human, mock or fail network requests, inspect cookies and local/session storage, collect downloads, and close an idle browser automatically.
 - **Stable targeting**: snapshot boxes, depth limits, and locators such as `role=button[name="Save"]`, `text=Save`, `label=Email`, `testid=search`, plus deterministic `browser_assert` checks.
 - **Live view** in the right sidebar, side by side with the conversation, refreshed about every 1.3 seconds.
 - **Activity log** — every action with its time, duration, result, page, new page errors, and a thumbnail you can enlarge.
@@ -100,10 +101,15 @@ Closing the right tab is remembered for that session, so it will not pop open ag
 | `browser_wait_for` | Wait for visible text, a selector, a URL, or network idle before acting. |
 | `browser_handle_dialog` | Answer a waiting JavaScript alert/confirm/prompt when `dialogBehavior` is `manual`. |
 | `browser_scroll` | Scroll the page or bring an element into view. |
+| `browser_highlight` | Draw a labeled overlay around an element so a human can see what the agent means; `durationMs: 0` keeps it, and `clear: true` removes every overlay. |
 | `browser_eval` | Evaluate JavaScript in the page and return the JSON value. |
 | `browser_console` | Recent console messages, uncaught errors, and failed requests, with source URL, line, column, and stack. |
 | `browser_assert` | Deterministic checks: text visible/hidden, element visible/hidden, value, checked, URL, title, or element count. Returns `PASS`/`FAIL` with expected and actual values; a false check is a normal result, not a tool error. |
 | `browser_network` | List requests (status, type, duration, size, URL) and inspect one request's redacted headers and bounded response body. |
+| `browser_route` | Mock, delay, or fail matching HTTP requests; list and clear routes. |
+| `browser_cookies` | List, set, and delete cookies for the current page or a URL; values matching configured secrets are redacted. |
+| `browser_storage` | List, get, set, remove, or clear local/session storage values for the current origin. |
+| `browser_download` | List downloads triggered by the page and wait for one to complete, with its saved path. |
 | `browser_styles` | Read computed styles and matched CSS rules for one element, with an optional property filter. |
 | `browser_emulate` | Emulate color scheme, reduced motion, mobile/touch, CPU slowdown, offline/slow networks, timezone, and geolocation; `clear` restores normal. |
 | `browser_performance` | Lightweight LCP, CLS, approximate INP, long tasks, navigation timing, resource count, and Chrome runtime metrics. |
@@ -124,6 +130,10 @@ Values can be set on the plugin's bundle row (a matching row override replaces i
     width: 1440
     height: 900
     profileDir: 'C:\Users\you\.dsh\browser-control\profile'
+    idleTimeoutMs: 300000
+    downloadDir: 'C:\Users\you\.dsh\browser-control\downloads'
+    secrets:
+      - 'sk-your-test-token'
 ```
 
 | Option | Default | Meaning |
@@ -134,6 +144,9 @@ Values can be set on the plugin's bundle row (a matching row override replaces i
 | `profileDir` | `~/.dsh/browser-control/profile` | Persistent Chrome profile. |
 | `dialogBehavior` | `dismiss` | JavaScript alert/confirm/prompt handling: `dismiss`, `accept`, or `manual`. `beforeunload` is always accepted. |
 | `followNewTabs` | `true` | Switch to a new tab opened by the current page. |
+| `idleTimeoutMs` | `300000` | Close the browser after this much inactivity; `0` disables. Clamped to 0–24 hours. |
+| `downloadDir` | `~/.dsh/browser-control/downloads` | Where page downloads are saved. |
+| `secrets` | `[]` | Strings (or `{ value }` objects) replaced with `[redacted]` in tool text, activity details, console/network output, cookies, and storage. |
 
 Environment fallbacks: `DSH_BROWSER_PATH` and `DSH_BROWSER_PROFILE`.
 
@@ -144,13 +157,21 @@ Environment fallbacks: `DSH_BROWSER_PATH` and `DSH_BROWSER_PROFILE`.
 - Opening the Harness URL itself signs the controlled Chrome in with the process token, then removes the token from the address bar; the token is not written to the activity log.
 - The agent can run arbitrary JavaScript in the controlled page (`browser_eval`) and open `file://` URLs. Use it only for pages you intend to inspect.
 - Network headers are redacted for `authorization`, `cookie`, `set-cookie`, `proxy-authorization`, and API-key/token headers; bodies are bounded and returned only when you ask for them. Other request data still comes from the page you opened, so treat it as sensitive.
+- `secrets` values are replaced with `[redacted]` in console output, network URLs/bodies, cookies, storage, tool results, and activity details. Add the test tokens you care about; redaction is literal string replacement, not format detection.
+- Cookies and storage belong to the controlled Chrome profile. `browser_cookies`/`browser_storage` can read and modify them for any page the agent opens, so only point the browser at sites you trust it with.
+- `browser_route` mocks run in-process: they intercept HTTP(S) requests from the controlled page but do not proxy traffic, and no mock data leaves this machine. Downloads are written to `downloadDir`.
 - No telemetry, no external requests beyond the pages you ask it to open.
-- Activity history and thumbnails live in Host memory (60 entries, 30 thumbnails) and are lost when the Host plugin reloads or the app restarts. Screenshots on disk live under the OS temp directory (`dsh-browser-control`) and are pruned to the newest 40.
+- Activity history and thumbnails live in Host memory (60 entries, 30 thumbnails) and are lost when the Host plugin reloads or the app restarts. Screenshots on disk live under the OS temp directory (`dsh-browser-control`) and are pruned to the newest 40. Downloads remain in `downloadDir` until you delete them.
 
 ## Limitations
 
 - One current page per Harness process; other tabs stay open and can be selected.
 - Network capture is per current page, in memory, capped at 300 requests; bodies are read on demand and binary bodies are decoded as text, which may be lossy.
+- Route mocks apply to the controlled browser (including subresources) while enabled; they are not a system proxy and do not affect other apps. Route rules survive tab switches but are not persisted across restarts.
+- Cookies and storage calls act on the current origin unless a URL is given; both live in the dedicated profile and are not a substitute for a real auth/session test suite.
+- Downloads are collected from the controlled page with Chrome's download events; a canceled download keeps a record but has no file. Paths use the page's suggested filename, so name collisions can overwrite earlier files.
+- Idle cleanup closes the browser after `idleTimeoutMs` of no tool calls; the next call starts a fresh one. Set `0` if you need it to stay up between long gaps.
+- `secrets` redaction is literal and global within this browser session; rotate a leaked test token rather than relying on redaction alone.
 - Snapshot refs are valid for the snapshot that produced them; re-snapshot after navigation or large DOM changes. Locator strings (`role=`, `text=`, `label=`, `testid=`) are more stable than refs across small updates.
 - `browser_assert` polls until the timeout (3 seconds by default); it deliberately returns `FAIL` for a false condition rather than throwing.
 - New tabs opened by the current page are followed by default; set `followNewTabs: false` to stay put. Cross-origin iframe internals are not inspectable.
@@ -180,7 +201,7 @@ docs/               Architecture artwork
 
 - No build step and no npm dependencies.
 - `node --check <file>` validates syntax.
-- Standalone smoke scripts are kept in a local scratch directory during development, not committed; they launch a headless Chrome against a temporary test page and exercise navigation, snapshot, locators, assertions, network/styles/emulation/performance, forms, tabs, dialogs, and crash recovery.
+- Standalone smoke scripts are kept in a local scratch directory during development, not committed; they launch a headless Chrome against a temporary test page and exercise navigation, snapshot, locators, assertions, network/styles/emulation/performance, highlight/routes/cookies/storage/downloads/idle cleanup, forms, tabs, dialogs, and crash recovery.
 - After editing **Host** files, uninstall and reinstall the bundle (the Loader keeps the previous module generation otherwise). After editing **Client** files, refresh the DSH window. Profile metadata changes need a restart.
 
 ## Troubleshooting

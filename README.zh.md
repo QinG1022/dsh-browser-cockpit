@@ -13,8 +13,9 @@
 
 ## 功能
 
-- **24 个浏览器工具**：打开、标签页、读页面、等待、处理对话框、点击、悬停、拖动、输入、批量填表、选择、上传、按键、滚动、执行脚本、读控制台、断言、网络、样式、模拟、性能、截图、切视口、关闭。
+- **29 个浏览器工具**：打开、标签页、读页面、等待、处理对话框、点击、悬停、拖动、输入、批量填表、选择、上传、按键、滚动、执行脚本、读控制台、断言、网络、样式、模拟、性能、截图、切视口、关闭、高亮、请求模拟、Cookie、存储、下载。
 - **调试深度**：请求列表/详情（凭据打码）、计算样式与匹配规则、单元素截图、设备/网络模拟，以及 LCP/CLS/近似 INP/长任务等轻量性能数据。
+- **页面控制**：高亮元素给人看、模拟或失败网络请求、读写 Cookie 与本地/会话存储、收集下载、空闲时自动关闭浏览器。
 - **稳定定位**：快照坐标、深度/节点上限，以及 `role=button[name="保存"]`、`text=保存`、`label=邮箱`、`testid=search` 定位；`browser_assert` 做确定性检查。
 - **实时画面**：右侧栏与对话并排，约 1.3 秒刷新一次。
 - **操作记录**：每一步的时间、耗时、结果、页面、新增报错，并附可放大的缩略图。
@@ -100,10 +101,15 @@ pnpm dev          # 终端会打印地址，例如 http://localhost:5173
 | `browser_wait_for` | 等待可见文本、选择器、URL 或网络空闲后再操作。 |
 | `browser_handle_dialog` | 在 `dialogBehavior` 为 `manual` 时处理等待中的 alert/confirm/prompt。 |
 | `browser_scroll` | 滚动页面，或把元素滚入视野。 |
+| `browser_highlight` | 在元素外画一个带标签的覆盖层，让人看清智能体指的是哪里；`durationMs: 0` 会一直保留，`clear: true` 清除所有覆盖层。 |
 | `browser_eval` | 在页面里执行 JavaScript 并返回 JSON 值。 |
 | `browser_console` | 最近的控制台消息、未捕获异常和失败请求，带来源 URL、行、列和调用栈。 |
 | `browser_assert` | 确定性检查：文本可见/隐藏、元素可见/隐藏、值、勾选、URL、标题或元素数量。返回 `PASS`/`FAIL` 和期望/实际值；条件不成立是正常结果，不当作工具错误。 |
 | `browser_network` | 列出请求（状态、类型、耗时、大小、URL），查看单条请求的打码请求/响应头和有限长度的响应体。 |
+| `browser_route` | 模拟、延迟或失败匹配的 HTTP 请求；列出和清除规则。 |
+| `browser_cookies` | 列出、设置、删除当前页面或指定 URL 的 Cookie；命中配置密钥的值会打码。 |
+| `browser_storage` | 列出、读取、设置、删除或清空当前源的本地/会话存储。 |
+| `browser_download` | 列出页面触发的下载，等待完成并返回保存路径。 |
 | `browser_styles` | 读取一个元素的计算样式和匹配的 CSS 规则，可按属性过滤。 |
 | `browser_emulate` | 模拟配色方案、减少动效、移动/触摸、CPU 降速、离线/慢网、时区和地理位置；`clear` 恢复。 |
 | `browser_performance` | 轻量读取 LCP、CLS、近似 INP、长任务、导航耗时、资源数和 Chrome 运行时指标。 |
@@ -124,6 +130,10 @@ pnpm dev          # 终端会打印地址，例如 http://localhost:5173
     width: 1440
     height: 900
     profileDir: 'C:\Users\you\.dsh\browser-control\profile'
+    idleTimeoutMs: 300000
+    downloadDir: 'C:\Users\you\.dsh\browser-control\downloads'
+    secrets:
+      - 'sk-your-test-token'
 ```
 
 | 选项 | 默认值 | 说明 |
@@ -134,6 +144,9 @@ pnpm dev          # 终端会打印地址，例如 http://localhost:5173
 | `profileDir` | `~/.dsh/browser-control/profile` | 持久化的 Chrome 配置目录。 |
 | `dialogBehavior` | `dismiss` | JavaScript alert/confirm/prompt 的处理方式：`dismiss`、`accept` 或 `manual`；`beforeunload` 始终接受。 |
 | `followNewTabs` | `true` | 是否跟随当前页面打开的新标签页。 |
+| `idleTimeoutMs` | `300000` | 无操作多久后关闭浏览器；`0` 表示不自动关闭。范围 0–24 小时。 |
+| `downloadDir` | `~/.dsh/browser-control/downloads` | 页面下载的保存目录。 |
+| `secrets` | `[]` | 字符串（或 `{ value }` 对象），在工具文本、操作详情、控制台/网络输出、Cookie 和存储中替换为 `[redacted]`。 |
 
 环境变量回退：`DSH_BROWSER_PATH`、`DSH_BROWSER_PROFILE`。
 
@@ -144,14 +157,22 @@ pnpm dev          # 终端会打印地址，例如 http://localhost:5173
 - 打开 Harness 自身地址时，插件会用进程 token 让受控 Chrome 登录一次，然后从地址栏移除 token；token 不会写进操作记录。
 - 智能体可以在受控页面里执行任意 JavaScript（`browser_eval`），也可以打开 `file://` 地址。只把它用在你打算检查的页面上。
 - 网络请求头中的 `authorization`、`cookie`、`set-cookie`、`proxy-authorization` 和 API key/token 类字段会打码；响应体只在请求时读取，并限制长度。其余请求数据仍来自你打开的页面，按敏感信息对待。
+- `secrets` 里的值会在控制台输出、网络 URL/响应体、Cookie、存储、工具结果和操作详情中替换为 `[redacted]`。请把你在意的测试 token 加进去；这是字面替换，不是格式识别。
+- Cookie 和存储属于受控 Chrome 的配置目录。`browser_cookies`/`browser_storage` 能读写智能体打开的任意页面，所以只让它访问你信任的站点。
+- `browser_route` 的模拟在进程内完成：拦截受控页面的 HTTP(S) 请求，但不做代理，模拟数据不离开本机。下载会写到 `downloadDir`。
 - 无遥测；除了你让它打开的页面，不会发起外部请求。
-- 操作记录和缩略图保存在 Host 内存里（60 条、30 张缩略图），Host 插件重载或应用重启后清空。磁盘截图位于系统临时目录（`dsh-browser-control`），只保留最近 40 张。
+- 操作记录和缩略图保存在 Host 内存里（60 条、30 张缩略图），Host 插件重载或应用重启后清空。磁盘截图位于系统临时目录（`dsh-browser-control`），只保留最近 40 张；下载文件会留在 `downloadDir`，直到你手动删除。
 
 ## 已知限制
 
 - 每个 Harness 进程只有一个当前页面；其他标签页保持打开，可切换。
 - 默认跟随当前页面打开的新标签页；`followNewTabs: false` 可关闭。跨域 iframe 内部无法检查。
 - 网络记录按当前页面保存在内存中，最多 300 条；响应体按需读取，二进制体会按文本解码，可能有损。
+- 请求模拟在启用期间作用于受控浏览器（含子资源），不是系统代理，不影响其他应用；规则跨标签页保留，但重启后不保存。
+- Cookie 和存储默认作用于当前源（也可指定 URL）；两者都存在独立配置目录里，不能替代真实的登录/会话测试。
+- 下载通过 Chrome 的下载事件收集；被取消的下载会留下记录但没有文件。路径使用页面建议的文件名，重名可能覆盖较早的文件。
+- 空闲清理会在 `idleTimeoutMs` 内没有工具调用后关闭浏览器；下次调用会重新启动。需要长时间挂着时设为 `0`。
+- `secrets` 打码是本会话内的字面、全局替换；测试 token 一旦泄露，仍应轮换，不能只依赖打码。
 - 快照引用只在生成它的快照内有效；导航或 DOM 大幅变化后要重新快照。`role=`、`text=`、`label=`、`testid=` 定位比引用更耐小改动。
 - `browser_assert` 会轮询到超时（默认 3 秒）；条件不成立时返回 `FAIL`，不抛异常。
 - CSS 检查覆盖元素的计算样式和匹配规则，不进入 shadow DOM 或伪元素内部。
@@ -180,7 +201,7 @@ docs/               架构图
 
 - 无构建步骤、无 npm 依赖。
 - `node --check <file>` 检查语法。
-- 独立冒烟脚本放在开发时的本地临时目录，不提交到仓库；它们会用无头 Chrome 打开临时测试页，覆盖导航、快照、定位、断言、网络/样式/模拟/性能、表单、标签页、对话框和崩溃恢复。
+- 独立冒烟脚本放在开发时的本地临时目录，不提交到仓库；它们会用无头 Chrome 打开临时测试页，覆盖导航、快照、定位、断言、网络/样式/模拟/性能、高亮/请求模拟/Cookie/存储/下载/空闲清理、表单、标签页、对话框和崩溃恢复。
 - 改 **Host** 文件后需要卸载再重装 bundle（否则 Loader 会沿用旧的模块代次）；改 **Client** 文件后刷新 DSH 窗口；插件元数据变动需要重启应用。
 
 ## 排查
