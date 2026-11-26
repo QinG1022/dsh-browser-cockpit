@@ -13,7 +13,9 @@ Agents are good at reading source code and bad at seeing a running interface. Th
 
 ## What you get
 
-- **19 browser tools** for the agent: open, tabs, snapshot, wait, handle dialog, click, hover, drag, type, fill form, select, upload, key, scroll, eval, console, screenshot, resize, close.
+- **24 browser tools** for the agent: open, tabs, snapshot, wait, handle dialog, click, hover, drag, type, fill form, select, upload, key, scroll, eval, console, assert, network, styles, emulate, performance, screenshot, resize, close.
+- **Debug depth**: request list/detail with redacted credentials, computed and matched CSS, single-element screenshots, device/network emulation, and lightweight LCP/CLS/INP/long-task timings.
+- **Stable targeting**: snapshot boxes, depth limits, and locators such as `role=button[name="Save"]`, `text=Save`, `label=Email`, `testid=search`, plus deterministic `browser_assert` checks.
 - **Live view** in the right sidebar, side by side with the conversation, refreshed about every 1.3 seconds.
 - **Activity log** — every action with its time, duration, result, page, new page errors, and a thumbnail you can enlarge.
 - **Auto-open**: the right tab appears on the agent's first browser action in a session; close it and a status pill takes over.
@@ -85,7 +87,7 @@ Closing the right tab is remembered for that session, so it will not pop open ag
 | Tool | Purpose |
 |---|---|
 | `browser_open` | Open a URL and return the page outline, visible text, and a screenshot. Starts Chrome on first use; `waitUntil` and `timeoutMs` control the navigation wait. |
-| `browser_snapshot` | Re-read the page: refs with control state, visible text, screenshot; `interactiveOnly` for a compact action list. |
+| `browser_snapshot` | Re-read the page: refs with control state, visible text, screenshot; `interactiveOnly` for a compact action list, `boxes` for viewport coordinates, `depth`/`maxNodes` to bound the tree. |
 | `browser_click` | Click an element by ref/selector, or a viewport point by x/y; left/right/middle buttons and 1–3 clicks. |
 | `browser_hover` | Move the mouse over an element to open menus or tooltips. |
 | `browser_drag` | Drag from one element to another with the left mouse button. |
@@ -99,8 +101,13 @@ Closing the right tab is remembered for that session, so it will not pop open ag
 | `browser_handle_dialog` | Answer a waiting JavaScript alert/confirm/prompt when `dialogBehavior` is `manual`. |
 | `browser_scroll` | Scroll the page or bring an element into view. |
 | `browser_eval` | Evaluate JavaScript in the page and return the JSON value. |
-| `browser_console` | Recent console messages, uncaught errors, and failed requests. |
-| `browser_screenshot` | Capture the viewport or the whole page as an image. |
+| `browser_console` | Recent console messages, uncaught errors, and failed requests, with source URL, line, column, and stack. |
+| `browser_assert` | Deterministic checks: text visible/hidden, element visible/hidden, value, checked, URL, title, or element count. Returns `PASS`/`FAIL` with expected and actual values; a false check is a normal result, not a tool error. |
+| `browser_network` | List requests (status, type, duration, size, URL) and inspect one request's redacted headers and bounded response body. |
+| `browser_styles` | Read computed styles and matched CSS rules for one element, with an optional property filter. |
+| `browser_emulate` | Emulate color scheme, reduced motion, mobile/touch, CPU slowdown, offline/slow networks, timezone, and geolocation; `clear` restores normal. |
+| `browser_performance` | Lightweight LCP, CLS, approximate INP, long tasks, navigation timing, resource count, and Chrome runtime metrics. |
+| `browser_screenshot` | Capture the viewport, the whole page, or one element by target/ref/selector. |
 | `browser_resize` | Change the viewport size (320–3840 × 240–2160). |
 | `browser_close` | Close the browser; the next tool call starts a fresh one. |
 
@@ -136,13 +143,19 @@ Environment fallbacks: `DSH_BROWSER_PATH` and `DSH_BROWSER_PROFILE`.
 - Panel routes are served by the local Harness web server only (`127.0.0.1`). `GET state/activity/frame/thumb` are unauthenticated on loopback; `POST action` requires a same-origin JSON request. Do not expose the Harness port to a network.
 - Opening the Harness URL itself signs the controlled Chrome in with the process token, then removes the token from the address bar; the token is not written to the activity log.
 - The agent can run arbitrary JavaScript in the controlled page (`browser_eval`) and open `file://` URLs. Use it only for pages you intend to inspect.
+- Network headers are redacted for `authorization`, `cookie`, `set-cookie`, `proxy-authorization`, and API-key/token headers; bodies are bounded and returned only when you ask for them. Other request data still comes from the page you opened, so treat it as sensitive.
 - No telemetry, no external requests beyond the pages you ask it to open.
 - Activity history and thumbnails live in Host memory (60 entries, 30 thumbnails) and are lost when the Host plugin reloads or the app restarts. Screenshots on disk live under the OS temp directory (`dsh-browser-control`) and are pruned to the newest 40.
 
 ## Limitations
 
 - One current page per Harness process; other tabs stay open and can be selected.
+- Network capture is per current page, in memory, capped at 300 requests; bodies are read on demand and binary bodies are decoded as text, which may be lossy.
+- Snapshot refs are valid for the snapshot that produced them; re-snapshot after navigation or large DOM changes. Locator strings (`role=`, `text=`, `label=`, `testid=`) are more stable than refs across small updates.
+- `browser_assert` polls until the timeout (3 seconds by default); it deliberately returns `FAIL` for a false condition rather than throwing.
 - New tabs opened by the current page are followed by default; set `followNewTabs: false` to stay put. Cross-origin iframe internals are not inspectable.
+- CSS inspection covers the element's computed style and matched rules; it does not walk into shadow DOM or pseudo-element internals.
+- Performance numbers are browser-reported and approximate; INP needs real interaction and LCP needs a load, so read them after the page settles.
 - Drag is a mouse-button drag; native HTML5 drag-and-drop may not fire drag events.
 - Chrome's native `<select>` popups and OS dialogs are outside the page and cannot be driven. JavaScript alert/confirm/prompt are handled: dismissed by default, accepted with `dialogBehavior: accept`, or answered with `browser_handle_dialog` under `manual`.
 - The right tab only renders in the conversation view; switching to another main panel hides the right column (the pill returns when you are back).
@@ -156,18 +169,18 @@ Environment fallbacks: `DSH_BROWSER_PATH` and `DSH_BROWSER_PROFILE`.
 index.js            Host plugin: one BrowserSession, tools, routes
 client.js           Client plugin: sidebar entry, panel, right tab, header icon, pill
 lib/browser.js      CDP page: launch, navigate, snapshot, click, type, capture
+lib/locators.js     Target locator parsing and page-side role/text matching
 lib/cdp.js          Minimal WebSocket CDP transport (Node's built-in WebSocket)
 lib/tools.js        Agent tool definitions + activity instrumentation
 lib/routes.js       Loopback panel routes (state, frame, activity, thumb, action)
 lib/activity.js     In-memory activity log and thumbnails
 lib/targets.js      URL normalization and one-time Harness sign-in
-dev-check/          Standalone smoke tests against a real Chrome
 docs/               Architecture artwork
 ```
 
 - No build step and no npm dependencies.
 - `node --check <file>` validates syntax.
-- `node dev-check/smoke.mjs` launches a headless Chrome against `dev-check/test.html` and exercises navigation, snapshot, click, typing, console capture, screenshots, and resize. `node dev-check/look.mjs <url> [out.png]` opens any URL and prints its reading.
+- Standalone smoke scripts are kept in a local scratch directory during development, not committed; they launch a headless Chrome against a temporary test page and exercise navigation, snapshot, locators, assertions, network/styles/emulation/performance, forms, tabs, dialogs, and crash recovery.
 - After editing **Host** files, uninstall and reinstall the bundle (the Loader keeps the previous module generation otherwise). After editing **Client** files, refresh the DSH window. Profile metadata changes need a restart.
 
 ## Troubleshooting

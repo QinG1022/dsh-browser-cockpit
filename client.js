@@ -92,6 +92,11 @@ window.__ModuleLoader__.load({
       'act.key': 'Press {key}',
       'act.wait': 'Wait for {target}',
       'act.waitNetwork': 'network idle',
+      'act.assert': 'Assert {condition}',
+      'act.network': 'Network: {action}',
+      'act.styles': 'Inspect element styles',
+      'act.emulate': 'Emulate {what}',
+      'act.performance': 'Read page performance',
       'act.dialogAccept': 'Accept dialog',
       'act.dialogDismiss': 'Dismiss dialog',
       'act.hover': 'Hover {target}',
@@ -185,6 +190,11 @@ window.__ModuleLoader__.load({
       'act.key': '按键 {key}',
       'act.wait': '等待 {target}',
       'act.waitNetwork': '网络空闲',
+      'act.assert': '检查 {condition}',
+      'act.network': '网络：{action}',
+      'act.styles': '检查元素样式',
+      'act.emulate': '模拟 {what}',
+      'act.performance': '读取页面性能',
       'act.dialogAccept': '接受对话框',
       'act.dialogDismiss': '取消对话框',
       'act.hover': '悬停 {target}',
@@ -393,10 +403,27 @@ window.__ModuleLoader__.load({
           const parts = []
           if (typeof detail.text === 'string' && detail.text !== '') parts.push(`“${shorten(detail.text, 24)}”`)
           if (typeof detail.selector === 'string' && detail.selector !== '') parts.push(shorten(detail.selector, 24))
+          if (typeof detail.target === 'string' && detail.target !== '') parts.push(shorten(detail.target, 24))
           if (typeof detail.url === 'string' && detail.url !== '') parts.push(shorten(detail.url, 24))
           if (detail.networkIdle === true) parts.push(t('act.waitNetwork'))
           return t('act.wait', { target: parts.join(' + ') || '—' })
         }
+        case 'assert':
+          return t('act.assert', { condition: shorten(detail.condition, 30) || '—' })
+        case 'network':
+          return t('act.network', { action: detail.action === 'detail' ? 'detail' : 'list' })
+        case 'styles':
+          return t('act.styles')
+        case 'emulate': {
+          const parts = []
+          if (typeof detail.network === 'string' && detail.network !== '') parts.push(detail.network)
+          if (typeof detail.colorScheme === 'string' && detail.colorScheme !== '') parts.push(detail.colorScheme)
+          if (detail.mobile === true) parts.push('mobile')
+          if (detail.clear === true) parts.push('clear')
+          return t('act.emulate', { what: parts.join(' / ') || 'device' })
+        }
+        case 'performance':
+          return t('act.performance')
         case 'hover':
           return t('act.hover', { target: shorten(detail.target, 24) || '—' })
         case 'drag':

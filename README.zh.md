@@ -13,7 +13,9 @@
 
 ## 功能
 
-- **19 个浏览器工具**：打开、标签页、读页面、等待、处理对话框、点击、悬停、拖动、输入、批量填表、选择、上传、按键、滚动、执行脚本、读控制台、截图、切视口、关闭。
+- **24 个浏览器工具**：打开、标签页、读页面、等待、处理对话框、点击、悬停、拖动、输入、批量填表、选择、上传、按键、滚动、执行脚本、读控制台、断言、网络、样式、模拟、性能、截图、切视口、关闭。
+- **调试深度**：请求列表/详情（凭据打码）、计算样式与匹配规则、单元素截图、设备/网络模拟，以及 LCP/CLS/近似 INP/长任务等轻量性能数据。
+- **稳定定位**：快照坐标、深度/节点上限，以及 `role=button[name="保存"]`、`text=保存`、`label=邮箱`、`testid=search` 定位；`browser_assert` 做确定性检查。
 - **实时画面**：右侧栏与对话并排，约 1.3 秒刷新一次。
 - **操作记录**：每一步的时间、耗时、结果、页面、新增报错，并附可放大的缩略图。
 - **自动打开**：会话里第一次操作浏览器时右侧栏自动展开；关掉后由状态胶囊接管。
@@ -85,7 +87,7 @@ pnpm dev          # 终端会打印地址，例如 http://localhost:5173
 | 工具 | 用途 |
 |---|---|
 | `browser_open` | 打开地址并返回页面结构、可见文本和截图；首次调用会启动 Chrome，`waitUntil`、`timeoutMs` 控制导航等待。 |
-| `browser_snapshot` | 重新读取页面：带控件状态的引用、可见文本、截图；`interactiveOnly` 返回紧凑操作列表。 |
+| `browser_snapshot` | 重新读取页面：带控件状态的引用、可见文本、截图；`interactiveOnly` 返回紧凑操作列表，`boxes` 附带视口坐标，`depth`/`maxNodes` 限制树大小。 |
 | `browser_click` | 按 ref/选择器点击元素，或用 x/y 点击视口坐标；支持左/右/中键和 1–3 次点击。 |
 | `browser_hover` | 把鼠标移到元素上，展开菜单或提示。 |
 | `browser_drag` | 用左键把一个元素拖到另一个元素。 |
@@ -99,8 +101,13 @@ pnpm dev          # 终端会打印地址，例如 http://localhost:5173
 | `browser_handle_dialog` | 在 `dialogBehavior` 为 `manual` 时处理等待中的 alert/confirm/prompt。 |
 | `browser_scroll` | 滚动页面，或把元素滚入视野。 |
 | `browser_eval` | 在页面里执行 JavaScript 并返回 JSON 值。 |
-| `browser_console` | 最近的控制台消息、未捕获异常和失败请求。 |
-| `browser_screenshot` | 截取视口或整页图片。 |
+| `browser_console` | 最近的控制台消息、未捕获异常和失败请求，带来源 URL、行、列和调用栈。 |
+| `browser_assert` | 确定性检查：文本可见/隐藏、元素可见/隐藏、值、勾选、URL、标题或元素数量。返回 `PASS`/`FAIL` 和期望/实际值；条件不成立是正常结果，不当作工具错误。 |
+| `browser_network` | 列出请求（状态、类型、耗时、大小、URL），查看单条请求的打码请求/响应头和有限长度的响应体。 |
+| `browser_styles` | 读取一个元素的计算样式和匹配的 CSS 规则，可按属性过滤。 |
+| `browser_emulate` | 模拟配色方案、减少动效、移动/触摸、CPU 降速、离线/慢网、时区和地理位置；`clear` 恢复。 |
+| `browser_performance` | 轻量读取 LCP、CLS、近似 INP、长任务、导航耗时、资源数和 Chrome 运行时指标。 |
+| `browser_screenshot` | 截取视口、整页，或按 target/ref/selector 截取单个元素。 |
 | `browser_resize` | 切换视口尺寸（320–3840 × 240–2160）。 |
 | `browser_close` | 关闭浏览器；下次工具调用会重新启动。 |
 
@@ -136,14 +143,19 @@ pnpm dev          # 终端会打印地址，例如 http://localhost:5173
 - 面板路由只由本地 Harness Web 服务提供（`127.0.0.1`）。`GET state/activity/frame/thumb` 在回环地址上不需要认证；`POST action` 要求同源 JSON 请求。不要把 Harness 端口暴露到网络。
 - 打开 Harness 自身地址时，插件会用进程 token 让受控 Chrome 登录一次，然后从地址栏移除 token；token 不会写进操作记录。
 - 智能体可以在受控页面里执行任意 JavaScript（`browser_eval`），也可以打开 `file://` 地址。只把它用在你打算检查的页面上。
+- 网络请求头中的 `authorization`、`cookie`、`set-cookie`、`proxy-authorization` 和 API key/token 类字段会打码；响应体只在请求时读取，并限制长度。其余请求数据仍来自你打开的页面，按敏感信息对待。
 - 无遥测；除了你让它打开的页面，不会发起外部请求。
 - 操作记录和缩略图保存在 Host 内存里（60 条、30 张缩略图），Host 插件重载或应用重启后清空。磁盘截图位于系统临时目录（`dsh-browser-control`），只保留最近 40 张。
 
 ## 已知限制
 
-- 每个 Harness 进程只控制一个页面。
 - 每个 Harness 进程只有一个当前页面；其他标签页保持打开，可切换。
 - 默认跟随当前页面打开的新标签页；`followNewTabs: false` 可关闭。跨域 iframe 内部无法检查。
+- 网络记录按当前页面保存在内存中，最多 300 条；响应体按需读取，二进制体会按文本解码，可能有损。
+- 快照引用只在生成它的快照内有效；导航或 DOM 大幅变化后要重新快照。`role=`、`text=`、`label=`、`testid=` 定位比引用更耐小改动。
+- `browser_assert` 会轮询到超时（默认 3 秒）；条件不成立时返回 `FAIL`，不抛异常。
+- CSS 检查覆盖元素的计算样式和匹配规则，不进入 shadow DOM 或伪元素内部。
+- 性能数字来自浏览器，属于近似值；INP 需要真实交互，LCP 需要加载，页面稳定后再读。
 - 拖拽使用鼠标按键事件；原生 HTML5 drag-and-drop 可能不会触发 drag 事件。
 - Chrome 原生 `<select>` 弹层和系统对话框不在页面里，无法驱动。JavaScript alert/confirm/prompt 已处理：默认取消，`dialogBehavior: accept` 接受，`manual` 时用 `browser_handle_dialog` 回答。
 - 右侧栏标签只在对话视图显示；切到其他主面板时右栏隐藏（回来后会恢复）。
@@ -157,18 +169,18 @@ pnpm dev          # 终端会打印地址，例如 http://localhost:5173
 index.js            Host 插件：一个 BrowserSession、工具、路由
 client.js           Client 插件：侧栏入口、面板、右侧栏标签、标题栏图标、状态胶囊
 lib/browser.js      CDP 页面：启动、导航、快照、点击、输入、截图
+lib/locators.js     定位串解析与页面内 role/text 匹配
 lib/cdp.js          最小 WebSocket CDP 传输（Node 内置 WebSocket）
 lib/tools.js        工具定义与活动埋点
 lib/routes.js       回环面板路由（state、frame、activity、thumb、action）
 lib/activity.js     内存操作日志与缩略图
 lib/targets.js      URL 规范化和 Harness 一次性登录
-dev-check/          针对真实 Chrome 的独立冒烟脚本
 docs/               架构图
 ```
 
 - 无构建步骤、无 npm 依赖。
 - `node --check <file>` 检查语法。
-- `node dev-check/smoke.mjs` 会用无头 Chrome 打开 `dev-check/test.html`，跑一遍导航、快照、点击、输入、控制台、截图和视口切换。`node dev-check/look.mjs <url> [out.png]` 可以打开任意地址并打印页面摘要。
+- 独立冒烟脚本放在开发时的本地临时目录，不提交到仓库；它们会用无头 Chrome 打开临时测试页，覆盖导航、快照、定位、断言、网络/样式/模拟/性能、表单、标签页、对话框和崩溃恢复。
 - 改 **Host** 文件后需要卸载再重装 bundle（否则 Loader 会沿用旧的模块代次）；改 **Client** 文件后刷新 DSH 窗口；插件元数据变动需要重启应用。
 
 ## 排查
