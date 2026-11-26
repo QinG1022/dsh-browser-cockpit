@@ -39,7 +39,9 @@ const assertSchema = tools.get('browser_assert')?.parameters
 check('browser_assert keeps title property', assertSchema?.properties?.title?.type === 'string')
 check('browser_assert requires condition', JSON.stringify(assertSchema?.required) === '["condition"]', JSON.stringify(assertSchema?.required))
 check('browser_open requires url', JSON.stringify(tools.get('browser_open')?.parameters.required) === '["url"]')
-check('browser_type requires text', JSON.stringify(tools.get('browser_type')?.parameters.required) === '["text"]')
+check('browser_type exposes text and secret', tools.get('browser_type')?.parameters.properties.text?.type === 'string'
+  && tools.get('browser_type')?.parameters.properties.secret?.type === 'string')
+check('browser_type validates text/secret at runtime', tools.get('browser_type')?.parameters.required === undefined)
 check('browser_click has no required property', tools.get('browser_click')?.parameters.required === undefined)
 
 if (failures > 0) {

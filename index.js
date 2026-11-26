@@ -11,7 +11,10 @@
  * - `followNewTabs`: `false` disables switching to tabs opened by the current page.
  * - `idleTimeoutMs`: close the browser after this much inactivity; `0` disables (default 5 minutes).
  * - `downloadDir`: directory for page downloads; defaults to ~/.dsh/browser-control/downloads.
+ * - `storageStateDir`: directory for exported storage-state files; defaults to ~/.dsh/browser-control/state.
  * - `secrets`: values to redact from tool output and activity details, as an array or `{ name: { value, domains? } }`.
+ * - `allowedHosts`: extra HTTP hosts the browser may open, as a comma-separated string or array; loopback is always allowed.
+ * - `allowFileUrls`: `true` permits `file://` navigation; defaults to false.
  * @module dsh-browser-cockpit
  */
 
@@ -26,7 +29,7 @@ export const inject = ['tools']
 /**
  * Activate the plugin: one browser session, its tools, and its panel routes.
  * @param {object} ctx - the host plugin context.
- * @param {{ browserPath?: string, headless?: boolean, width?: number, height?: number, profileDir?: string, dialogBehavior?: 'dismiss' | 'accept' | 'manual', followNewTabs?: boolean, idleTimeoutMs?: number, downloadDir?: string, secrets?: unknown }} [config] - row configuration.
+ * @param {{ browserPath?: string, headless?: boolean, width?: number, height?: number, profileDir?: string, dialogBehavior?: 'dismiss' | 'accept' | 'manual', followNewTabs?: boolean, idleTimeoutMs?: number, downloadDir?: string, storageStateDir?: string, secrets?: unknown, allowedHosts?: string | string[], allowFileUrls?: boolean }} [config] - row configuration.
  */
 export function apply(ctx, config = {}) {
   const settings = config !== null && typeof config === 'object' ? config : {}
@@ -40,7 +43,10 @@ export function apply(ctx, config = {}) {
     followNewTabs: settings.followNewTabs !== false,
     idleTimeoutMs: typeof settings.idleTimeoutMs === 'number' ? settings.idleTimeoutMs : undefined,
     downloadDir: typeof settings.downloadDir === 'string' ? settings.downloadDir : undefined,
+    storageStateDir: typeof settings.storageStateDir === 'string' ? settings.storageStateDir : undefined,
     secrets: settings.secrets,
+    allowedHosts: settings.allowedHosts,
+    allowFileUrls: settings.allowFileUrls === true,
   })
 
   ctx.effect(() => () => {

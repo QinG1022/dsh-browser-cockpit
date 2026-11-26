@@ -26,6 +26,135 @@ window.__ModuleLoader__.load({
     ]
     const FRESH_MS = 4000
 
+    /**
+     * One shared state/activity feed for every surface (left panel, right tab,
+     * composer strip). Mounting a second surface must not double the polling;
+     * the last unmount stops the loops and a remount resumes them.
+     */
+    const FEED = {
+      state: null,
+      activity: [],
+      current: null,
+      offline: false,
+      loaded: false,
+      lastId: 0,
+      refs: 0,
+      active: false,
+      generation: 0,
+      listeners: new Set(),
+    }
+
+    function notifyFeed() {
+      for (const listener of FEED.listeners) {
+        try {
+          listener()
+        } catch {
+          // A broken subscriber must not stop the others.
+        }
+      }
+    }
+
+    function laterFeed(generation, task, delay) {
+      if (!FEED.active || generation !== FEED.generation) return
+      setTimeout(task, delay)
+    }
+
+    function pollFeedState(generation) {
+      if (!FEED.active || generation !== FEED.generation) return
+      fetch(`${BASE}state`, { cache: 'no-store' })
+        .then(async (response) => {
+          if (!response.ok) throw new Error(`HTTP ${response.status}`)
+          return response.json()
+        })
+        .then((next) => {
+          if (!FEED.active || generation !== FEED.generation) return
+          FEED.state = next
+          FEED.offline = false
+          notifyFeed()
+        })
+        .catch(() => {
+          if (!FEED.active || generation !== FEED.generation) return
+          FEED.offline = true
+          if (FEED.state === null) FEED.state = { running: false, phase: 'stopped' }
+          notifyFeed()
+        })
+        .finally(() => laterFeed(generation, () => pollFeedState(generation), 2500))
+    }
+
+    function pollFeedActivity(generation) {
+      if (!FEED.active || generation !== FEED.generation) return
+      fetch(`${BASE}activity?since=${FEED.lastId}`, { cache: 'no-store' })
+        .then(async (response) => {
+          if (!response.ok) throw new Error(`HTTP ${response.status}`)
+          return response.json()
+        })
+        .then((payload) => {
+          if (!FEED.active || generation !== FEED.generation) return
+          FEED.current = payload.current ?? null
+          if (typeof payload.lastId === 'number') {
+            if (payload.lastId < FEED.lastId) {
+              // A restarted Host restarts ids; rebaseline instead of treating its history as new actions.
+              FEED.lastId = 0
+              FEED.loaded = false
+              FEED.activity = []
+            } else {
+              FEED.lastId = payload.lastId
+            }
+          }
+          if (Array.isArray(payload.entries) && payload.entries.length > 0) {
+            const merged = new Map(FEED.activity.map((entry) => [entry.id, entry]))
+            for (const entry of payload.entries) merged.set(entry.id, entry)
+            FEED.activity = [...merged.values()].sort((left, right) => right.id - left.id).slice(0, 60)
+          }
+          FEED.loaded = true
+          notifyFeed()
+        })
+        .catch(() => {
+          // Keep the previous feed; the next tick retries.
+        })
+        .finally(() => laterFeed(generation, () => pollFeedActivity(generation), 1200))
+    }
+
+    function beginFeed() {
+      if (FEED.active) return
+      FEED.active = true
+      FEED.generation += 1
+      const generation = FEED.generation
+      pollFeedState(generation)
+      pollFeedActivity(generation)
+    }
+
+    function endFeed() {
+      FEED.refs = Math.max(0, FEED.refs - 1)
+      if (FEED.refs > 0) return
+      FEED.active = false
+      FEED.generation += 1
+    }
+
+    function subscribeFeed(listener) {
+      FEED.listeners.add(listener)
+      FEED.refs += 1
+      beginFeed()
+      return () => {
+        FEED.listeners.delete(listener)
+        endFeed()
+      }
+    }
+
+    /** Replace the shared state after a panel action so every surface updates at once. */
+    function updateFeedState(next) {
+      if (next === null || typeof next !== 'object') return
+      FEED.state = next
+      FEED.offline = false
+      notifyFeed()
+    }
+
+    function useSharedFeed() {
+      const [, setTick] = useState(0)
+      useEffect(() => subscribeFeed(() => setTick((value) => value + 1)), [])
+      return FEED
+    }
+
     const EN = {
       panel: 'Browser',
       title: 'Browser cockpit',
@@ -121,6 +250,8 @@ window.__ModuleLoader__.load({
       'guide.description': 'Live view and activity beside the conversation.',
       'header.open': 'Browser live view',
       'tab.empty': 'The browser is not running yet. Open the Browser panel, or ask the agent to open a page.',
+      'tab.inactive': 'Another conversation is using the page',
+      'tab.inactive.body': 'This conversation gets its own page when the agent next uses the browser. Open the Browser panel to watch the active conversation.',
       'tab.openPanel': 'Open the Browser panel',
       'tab.waiting': 'Waiting for the first action…',
       'tab.foot': '{url} · {width}×{height}',
@@ -224,6 +355,8 @@ window.__ModuleLoader__.load({
       'guide.description': '和对话并排显示实时画面与操作记录。',
       'header.open': '浏览器实时画面',
       'tab.empty': '浏览器还没启动。打开「浏览器」面板，或让智能体打开一个页面。',
+      'tab.inactive': '另一个会话正在使用页面',
+      'tab.inactive.body': '智能体下次操作浏览器时，本会话会获得自己的页面。打开「浏览器」面板可查看当前会话。',
       'tab.openPanel': '打开「浏览器」面板',
       'tab.waiting': '等待第一步操作…',
       'tab.foot': '{url} · {width}×{height}',
@@ -612,86 +745,14 @@ window.__ModuleLoader__.load({
       }
     }
 
-    /** State, activity, and live frames for the compact right-sidebar tab. */
-    function useBrowserTabFeed() {
-      const [state, setState] = useState(null)
-      const [activity, setActivity] = useState([])
-      const [current, setCurrent] = useState(null)
-      const [offline, setOffline] = useState(false)
+    /**
+     * Live JPEG frames: one SSE stream from the Host with a polling fallback.
+     * Frames arrive as `event: frame`; `EventSource` reconnects on transient
+     * errors, so a hard error closes it and switches to `/frame.jpg` polling.
+     */
+    function useLiveFrame(running) {
       const [frameUrl, setFrameUrl] = useState(null)
       const [frameAt, setFrameAt] = useState(0)
-      const [now, setNow] = useState(Date.now())
-      const sinceRef = useRef(0)
-
-      useEffect(() => {
-        const id = setInterval(() => setNow(Date.now()), 1000)
-        return () => clearInterval(id)
-      }, [])
-
-      useEffect(() => {
-        let alive = true
-        let timer
-        const tick = async () => {
-          try {
-            const response = await fetch(`${BASE}state`, { cache: 'no-store' })
-            if (!response.ok) throw new Error(`HTTP ${response.status}`)
-            const next = await response.json()
-            if (!alive) return
-            setState(next)
-            setOffline(false)
-          } catch {
-            if (!alive) return
-            setOffline(true)
-            setState((previous) => previous ?? { running: false, phase: 'stopped' })
-          }
-          if (alive) timer = setTimeout(tick, 2500)
-        }
-        tick()
-        return () => {
-          alive = false
-          clearTimeout(timer)
-        }
-      }, [])
-
-      useEffect(() => {
-        let alive = true
-        let timer
-        const tick = async () => {
-          try {
-            const response = await fetch(`${BASE}activity?since=${sinceRef.current}`, { cache: 'no-store' })
-            if (response.ok) {
-              const payload = await response.json()
-              if (!alive) return
-              setCurrent(payload.current ?? null)
-              if (typeof payload.lastId === 'number') {
-                if (payload.lastId < sinceRef.current) {
-                  sinceRef.current = 0
-                  setActivity([])
-                } else {
-                  sinceRef.current = payload.lastId
-                }
-              }
-              if (Array.isArray(payload.entries) && payload.entries.length > 0) {
-                setActivity((previous) => {
-                  const merged = new Map(previous.map((entry) => [entry.id, entry]))
-                  for (const entry of payload.entries) merged.set(entry.id, entry)
-                  return [...merged.values()].sort((left, right) => right.id - left.id).slice(0, 40)
-                })
-              }
-            }
-          } catch {
-            // Keep the previous timeline; the next tick retries.
-          }
-          if (alive) timer = setTimeout(tick, 1200)
-        }
-        tick()
-        return () => {
-          alive = false
-          clearTimeout(timer)
-        }
-      }, [])
-
-      const running = state?.running === true
       useEffect(() => {
         if (!running) {
           setFrameUrl(null)
@@ -699,9 +760,15 @@ window.__ModuleLoader__.load({
           return undefined
         }
         let alive = true
+        let source = null
         let timer
         let objectUrl = null
-        const loop = async () => {
+        const accept = (url) => {
+          if (!alive) return
+          setFrameUrl(url)
+          setFrameAt(Date.now())
+        }
+        const poll = async () => {
           try {
             const response = await fetch(`${BASE}frame.jpg`, { cache: 'no-store' })
             if (response.ok) {
@@ -710,31 +777,65 @@ window.__ModuleLoader__.load({
                 const next = URL.createObjectURL(blob)
                 const previous = objectUrl
                 objectUrl = next
-                setFrameUrl(next)
-                setFrameAt(Date.now())
+                accept(next)
                 if (previous !== null) setTimeout(() => URL.revokeObjectURL(previous), 1200)
               }
             }
           } catch {
-            // Keep the last frame; the gap is reported through the badge.
+            // Keep the last frame; the freshness badge reports the gap.
           }
-          if (alive) timer = setTimeout(loop, 1300)
+          if (alive) timer = setTimeout(poll, 1100)
         }
-        loop()
+        if (typeof EventSource === 'function') {
+          try {
+            source = new EventSource(`${BASE}stream`)
+            source.addEventListener('frame', (event) => {
+              if (alive) accept(`data:image/jpeg;base64,${event.data}`)
+            })
+            source.addEventListener('error', () => {
+              if (!alive) return
+              source?.close()
+              source = null
+              void poll()
+            })
+          } catch {
+            source = null
+            void poll()
+          }
+        } else {
+          void poll()
+        }
         return () => {
           alive = false
           clearTimeout(timer)
+          source?.close()
           if (objectUrl !== null) URL.revokeObjectURL(objectUrl)
         }
       }, [running])
+      return { frameUrl, frameAt }
+    }
 
-      return { state, activity, current, offline, frameUrl, frameAt, now, running }
+    /** State, activity, and live frames for the compact right-sidebar tab. */
+    function useBrowserTabFeed(sessionId) {
+      const feed = useSharedFeed()
+      const [now, setNow] = useState(Date.now())
+
+      useEffect(() => {
+        const id = setInterval(() => setNow(Date.now()), 1000)
+        return () => clearInterval(id)
+      }, [])
+
+      const active = typeof sessionId === 'string' && feed.state?.activeSessionId === sessionId
+      const running = active && feed.state?.running === true
+      const live = useLiveFrame(running)
+      return { state: feed.state, activity: feed.activity, current: feed.current, offline: feed.offline, active, ...live, now, running }
     }
 
     /** Compact live view and timeline shown in the right sidebar beside the conversation. */
     function BrowserTabBody(props) {
       const t = makeTranslator(props)
-      const feed = useBrowserTabFeed()
+      const sessionId = typeof props.sessionId === 'string' ? props.sessionId : null
+      const feed = useBrowserTabFeed(sessionId)
       const [expanded, setExpanded] = useState(null)
       useEffect(() => {
         mountedBrowserTabs += 1
@@ -746,10 +847,11 @@ window.__ModuleLoader__.load({
       const statusClass = phase === 'running' ? 'is-running' : phase === 'starting' ? 'is-starting' : phase === 'failed' || phase === 'offline' ? 'is-failed' : ''
       const statusLabel = t(phase === 'running' ? 'status.running' : phase === 'starting' ? 'status.starting' : phase === 'failed' ? 'status.failed' : phase === 'offline' ? 'status.offline' : 'status.stopped')
       const frameAge = feed.frameAt === 0 ? Number.POSITIVE_INFINITY : feed.now - feed.frameAt
-      const badgeText = phase === 'running'
-        ? `${statusLabel} · ${frameAge < FRESH_MS ? t('stage.live') : t('stage.paused')}`
-        : statusLabel
-      const sessionId = typeof props.sessionId === 'string' ? props.sessionId : null
+      const badgeText = !feed.active
+        ? t('tab.inactive')
+        : phase === 'running'
+          ? `${statusLabel} · ${frameAge < FRESH_MS ? t('stage.live') : t('stage.paused')}`
+          : statusLabel
       // Panel/CLI actions carry no session id; including them would leak one
       // conversation's activity into every tab and pill.
       const belongs = (entry) => typeof sessionId === 'string' && entry.sessionId === sessionId
@@ -763,23 +865,28 @@ window.__ModuleLoader__.load({
           : newest !== null
             ? activityLabel(t, newest)
             : t('tab.waiting')
-      const url = typeof feed.state?.url === 'string' && feed.state.url !== 'about:blank' ? feed.state.url : ''
+      const url = feed.active && typeof feed.state?.url === 'string' && feed.state.url !== 'about:blank' ? feed.state.url : ''
       const viewport = feed.state === null ? '' : `${feed.state.width}×${feed.state.height}`
 
       return h('div', { className: 'dsh-bc-tab' },
         h('style', null, TAB_CSS),
         h('div', { className: 'dsh-bc-tab-stage' },
-          feed.frameUrl !== null
-            ? h('img', { className: 'dsh-bc-tab-frame', src: feed.frameUrl, alt: typeof feed.state?.title === 'string' ? feed.state.title : t('panel') })
+          feed.active
+            ? feed.frameUrl !== null
+              ? h('img', { className: 'dsh-bc-tab-frame', src: feed.frameUrl, alt: typeof feed.state?.title === 'string' ? feed.state.title : t('panel') })
+              : h('div', { className: 'dsh-bc-tab-empty' },
+                  h('span', null, t('tab.empty')),
+                  h('button', { className: 'dsh-bc-btn', type: 'button', onClick: () => props.onOpenPanel?.() }, t('tab.openPanel')),
+                )
             : h('div', { className: 'dsh-bc-tab-empty' },
-                h('span', null, t('tab.empty')),
+                h('span', null, t('tab.inactive.body')),
                 h('button', { className: 'dsh-bc-btn', type: 'button', onClick: () => props.onOpenPanel?.() }, t('tab.openPanel')),
               ),
           h('div', { className: 'dsh-bc-tab-badge', role: 'status', 'aria-live': 'polite' },
             h('span', { className: `dsh-bc-dot ${statusClass}`.trim() }),
             h('span', null, badgeText),
           ),
-          feed.frameUrl !== null ? h('div', { className: 'dsh-bc-tab-readonly' }, t('stage.readonly')) : null,
+          feed.active && feed.frameUrl !== null ? h('div', { className: 'dsh-bc-tab-readonly' }, t('stage.readonly')) : null,
         ),
         h('div', { className: 'dsh-bc-tab-live', title: liveLabel }, liveLabel),
         h('div', { className: 'dsh-bc-tab-list' },
@@ -842,10 +949,10 @@ window.__ModuleLoader__.load({
     function BrowserStrip(props) {
       const t = makeTranslator(props)
       const sessionId = typeof props.sessionId === 'string' ? props.sessionId : null
-      const [activity, setActivity] = useState([])
-      const [current, setCurrent] = useState(null)
+      const feed = useSharedFeed()
+      const activity = feed.activity
+      const current = feed.current
       const [now, setNow] = useState(Date.now())
-      const sinceRef = useRef(0)
       const seenRef = useRef(0)
       const readyRef = useRef(false)
       const autoOpenedRef = useRef(false)
@@ -856,50 +963,16 @@ window.__ModuleLoader__.load({
       }, [])
 
       useEffect(() => {
-        let alive = true
-        let timer
-        const tick = async () => {
-          try {
-            const response = await fetch(`${BASE}activity?since=${sinceRef.current}`, { cache: 'no-store' })
-            if (response.ok) {
-              const payload = await response.json()
-              if (!alive) return
-              setCurrent(payload.current ?? null)
-              if (typeof payload.lastId === 'number') {
-                if (payload.lastId < sinceRef.current) {
-                  // A restarted Host restarts ids; rebaseline instead of treating its history as new actions.
-                  sinceRef.current = 0
-                  readyRef.current = false
-                  seenRef.current = 0
-                  setActivity([])
-                } else {
-                  sinceRef.current = payload.lastId
-                  if (!readyRef.current) {
-                    // The first complete read is history; only later actions may auto-open the tab.
-                    readyRef.current = true
-                    seenRef.current = payload.lastId
-                  }
-                }
-              }
-              if (Array.isArray(payload.entries) && payload.entries.length > 0) {
-                setActivity((previous) => {
-                  const merged = new Map(previous.map((entry) => [entry.id, entry]))
-                  for (const entry of payload.entries) merged.set(entry.id, entry)
-                  return [...merged.values()].sort((left, right) => right.id - left.id).slice(0, 40)
-                })
-              }
-            }
-          } catch {
-            // Keep the previous state; the next tick retries.
-          }
-          if (alive) timer = setTimeout(tick, 1200)
+        if (!feed.loaded) {
+          readyRef.current = false
+          seenRef.current = 0
+          return
         }
-        tick()
-        return () => {
-          alive = false
-          clearTimeout(timer)
-        }
-      }, [])
+        if (readyRef.current) return
+        // The first complete read is history; only later actions may auto-open the tab.
+        readyRef.current = true
+        seenRef.current = feed.lastId
+      }, [feed.loaded, feed.lastId])
 
       // Panel/CLI actions carry no session id; including them would leak one
       // conversation's activity into every tab and pill.
@@ -972,19 +1045,13 @@ window.__ModuleLoader__.load({
         }
         return value
       }
-      const [state, setState] = useState(null)
-      const [frameUrl, setFrameUrl] = useState(null)
-      const [frameAt, setFrameAt] = useState(0)
+      const feed = useSharedFeed()
+      const { state, activity, current: currentAction, offline } = feed
       const [now, setNow] = useState(Date.now())
       const [address, setAddress] = useState(() => readLastUrl())
       const [busyAction, setBusyAction] = useState(null)
       const [notice, setNotice] = useState(null)
-      const [offline, setOffline] = useState(false)
-      const [refreshTick, setRefreshTick] = useState(0)
-      const [activity, setActivity] = useState([])
-      const [currentAction, setCurrentAction] = useState(null)
       const [expanded, setExpanded] = useState(null)
-      const sinceRef = useRef(0)
       const addressEdited = useRef(false)
 
       useEffect(() => {
@@ -993,113 +1060,15 @@ window.__ModuleLoader__.load({
       }, [])
 
       useEffect(() => {
-        let alive = true
-        let timer
-        const tick = async () => {
-          try {
-            const response = await fetch(`${BASE}state`, { cache: 'no-store' })
-            if (!response.ok) throw new Error(`HTTP ${response.status}`)
-            const next = await response.json()
-            if (!alive) return
-            setState(next)
-            setOffline(false)
-            // Follow the page the agent navigated to, unless the human is editing the address.
-            if (typeof next.url === 'string' && next.url !== '' && next.url !== 'about:blank' && !addressEdited.current) {
-              setAddress(next.url)
-              rememberLastUrl(next.url)
-            }
-          } catch {
-            if (!alive) return
-            setOffline(true)
-            setState((current) => current ?? { running: false, phase: 'stopped' })
-          }
-          if (alive) timer = setTimeout(tick, 2500)
-        }
-        tick()
-        return () => {
-          alive = false
-          clearTimeout(timer)
-        }
-      }, [refreshTick])
+        const url = state?.url
+        if (typeof url !== 'string' || url === '' || url === 'about:blank' || addressEdited.current) return
+        // Follow the page the agent navigated to, unless the human is editing the address.
+        setAddress(url)
+        rememberLastUrl(url)
+      }, [state?.url])
 
-      useEffect(() => {
-        let alive = true
-        let timer
-        const tick = async () => {
-          try {
-            const response = await fetch(`${BASE}activity?since=${sinceRef.current}`, { cache: 'no-store' })
-            if (response.ok) {
-              const payload = await response.json()
-              if (!alive) return
-              setCurrentAction(payload.current ?? null)
-              if (typeof payload.lastId === 'number') {
-                // A restarted Host restarts ids; drop the stale timeline and reload it.
-                if (payload.lastId < sinceRef.current) {
-                  sinceRef.current = 0
-                  setActivity([])
-                } else {
-                  sinceRef.current = payload.lastId
-                }
-              }
-              if (Array.isArray(payload.entries) && payload.entries.length > 0) {
-                setActivity((previous) => {
-                  const merged = new Map(previous.map((entry) => [entry.id, entry]))
-                  for (const entry of payload.entries) merged.set(entry.id, entry)
-                  return [...merged.values()].sort((left, right) => right.id - left.id).slice(0, 50)
-                })
-              }
-            }
-          } catch {
-            // Keep the previous timeline; the next tick retries.
-          }
-          if (alive) timer = setTimeout(tick, 1000)
-        }
-        tick()
-        return () => {
-          alive = false
-          clearTimeout(timer)
-        }
-      }, [])
-
-      const running = state?.running === true
-      const phase = offline ? 'offline' : typeof state?.phase === 'string' ? state.phase : 'stopped'
       const busy = busyAction !== null
-
-      useEffect(() => {
-        if (!running) {
-          setFrameUrl(null)
-          setFrameAt(0)
-          return undefined
-        }
-        let alive = true
-        let timer
-        let objectUrl = null
-        const loop = async () => {
-          try {
-            const response = await fetch(`${BASE}frame.jpg`, { cache: 'no-store' })
-            if (response.ok) {
-              const blob = await response.blob()
-              if (alive) {
-                const next = URL.createObjectURL(blob)
-                const previous = objectUrl
-                objectUrl = next
-                setFrameUrl(next)
-                setFrameAt(Date.now())
-                if (previous !== null) setTimeout(() => URL.revokeObjectURL(previous), 1200)
-              }
-            }
-          } catch {
-            // Keep the last frame; the gap is reported through the freshness badge.
-          }
-          if (alive) timer = setTimeout(loop, 1300)
-        }
-        loop()
-        return () => {
-          alive = false
-          clearTimeout(timer)
-          if (objectUrl !== null) URL.revokeObjectURL(objectUrl)
-        }
-      }, [running])
+      const { frameUrl, frameAt } = useLiveFrame(running)
 
       const describeFailure = (message) => {
         const detail = String(message ?? '')
@@ -1123,8 +1092,7 @@ window.__ModuleLoader__.load({
           })
           const payload = await response.json().catch(() => null)
           if (!response.ok || payload?.ok !== true) throw new Error(payload?.error ?? `HTTP ${response.status}`)
-          setState(payload.state)
-          setOffline(false)
+          updateFeedState(payload.state)
           if (typeof payload.state?.url === 'string' && payload.state.url !== '' && payload.state.url !== 'about:blank') {
             addressEdited.current = false
             setAddress(payload.state.url)
