@@ -67,6 +67,22 @@ export function apply(ctx, config = {}) {
       return null
     }
   })
+  session.setConversationResolver(() => {
+    try {
+      const sessions = ctx.get('sessions')
+      if (typeof sessions?.list !== 'function') return []
+      const titles = ctx.get('sessionTitle')
+      return sessions.list()
+        .filter((live) => live?.header?.origin !== 'subagent')
+        .map((live) => ({
+          sessionId: String(live.id),
+          title: titles?.get?.(live)?.title ?? null,
+          createdAt: live.header?.createdAt ?? null,
+        }))
+    } catch {
+      return []
+    }
+  })
   registerBrowserTools(ctx, session, resolveTarget, activity)
 
   ctx.inject(['webServer'], (scope) => {

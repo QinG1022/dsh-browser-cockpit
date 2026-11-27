@@ -198,7 +198,7 @@ window.__ModuleLoader__.load({
       'v16.confirmCloseShort': 'Confirm close',
       'v16.emptyTitle': 'No browser open',
       'v16.emptyBody': 'A browser appears here when the agent uses browser tools, or when you press +.',
-      'v16.emptyCta': 'New browser',
+      'v16.emptyCta': 'Open current conversation browser',
       'v16.log': 'Activity',
       'v16.logEmpty': 'No activity for this conversation yet.',
       'v16.errors': 'Errors',
@@ -208,6 +208,11 @@ window.__ModuleLoader__.load({
       'v16.railHide': 'Hide activity',
       'v16.menu': 'More',
       'v16.noSession': 'No conversation is available for a new browser yet.',
+      'v16.newTitle': 'Open a browser for…',
+      'v16.newEmpty': 'No live conversation is available.',
+      'v16.hasBrowser': 'Browser open',
+      'v16.noConversations': 'No live conversation is available to open a browser.',
+      'v16.networkGroup': 'Network × {count}',
       'v16.close': 'Close',
       'v16.cancel': 'Cancel',
       'status.running': 'Running',
@@ -340,7 +345,7 @@ window.__ModuleLoader__.load({
       'v16.confirmCloseShort': '确认关闭',
       'v16.emptyTitle': '还没有浏览器',
       'v16.emptyBody': '智能体使用浏览器工具，或点击 + 新建后，会在这里出现。',
-      'v16.emptyCta': '新建浏览器',
+      'v16.emptyCta': '打开当前会话浏览器',
       'v16.log': '操作记录',
       'v16.logEmpty': '这个会话还没有操作记录。',
       'v16.errors': '错误',
@@ -350,6 +355,11 @@ window.__ModuleLoader__.load({
       'v16.railHide': '收起操作记录',
       'v16.menu': '更多',
       'v16.noSession': '现在没有可用于新建浏览器的会话。',
+      'v16.newTitle': '为哪个会话打开浏览器？',
+      'v16.newEmpty': '没有可用的对话。',
+      'v16.hasBrowser': '已打开',
+      'v16.noConversations': '当前没有可以打开浏览器的对话。',
+      'v16.networkGroup': '网络 × {count}',
       'v16.close': '关闭',
       'v16.cancel': '取消',
       'status.running': '运行中',
@@ -588,6 +598,14 @@ window.__ModuleLoader__.load({
 .dsh-bc16-toolbar{height:48px;flex:0 0 48px;display:flex;align-items:center;gap:8px;padding:0 14px;border-bottom:1px solid var(--dsw-alias-border-l1);background:var(--dsw-alias-bg-base);min-width:0;}
 .dsh-bc16-toolbar-main{display:flex;align-items:center;gap:8px;min-width:0;flex:1 1 auto;}
 .dsh-bc16-toolbar-side{display:flex;align-items:center;gap:6px;flex:0 0 auto;position:relative;}
+.dsh-bc16-new{position:relative;display:inline-flex;align-items:center;}
+.dsh-bc16-newmenu{position:absolute;top:34px;right:0;z-index:24;width:min(280px,72vw);max-height:320px;overflow:auto;padding:5px;border:1px solid var(--dsw-alias-border-l2);border-radius:10px;background:var(--dsw-alias-bg-layer-1);box-shadow:0 12px 30px rgba(0,0,0,.34);display:flex;flex-direction:column;gap:1px;}
+.dsh-bc16-new-head{padding:6px 8px 7px;font-size:11px;font-weight:600;color:var(--dsw-alias-label-secondary);}
+.dsh-bc16-new-empty{padding:10px 8px;font-size:11.5px;color:var(--dsw-alias-label-secondary);}
+.dsh-bc16-new-item{display:flex;align-items:center;gap:8px;width:100%;padding:7px 8px;border:0;border-radius:6px;background:transparent;color:var(--dsw-alias-label-primary);font-family:inherit;font-size:11.5px;text-align:left;cursor:pointer;}
+.dsh-bc16-new-item:hover,.dsh-bc16-new-item:focus-visible{background:var(--dsw-alias-bg-layer-2);outline:none;}
+.dsh-bc16-new-title{flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.dsh-bc16-new-tag{flex:0 0 auto;padding:2px 5px;border-radius:4px;background:var(--dsw-alias-bg-layer-2);color:var(--dsw-alias-label-secondary);font-size:10px;}
 .dsh-bc16-icon{width:28px;height:28px;display:inline-flex;align-items:center;justify-content:center;border:1px solid transparent;border-radius:8px;background:transparent;color:var(--dsw-alias-label-secondary);cursor:pointer;font-family:inherit;font-size:15px;line-height:1;padding:0;flex:0 0 auto;}
 .dsh-bc16-icon:hover:not(:disabled){background:var(--dsw-alias-bg-layer-2);color:var(--dsw-alias-label-primary);}
 .dsh-bc16-icon:focus-visible,.dsh-bc16-btn:focus-visible,.dsh-bc16-tile:focus-visible{outline:2px solid var(--dsw-alias-brand-primary);outline-offset:2px;}
@@ -643,7 +661,9 @@ window.__ModuleLoader__.load({
 .dsh-bc16-log-time{font-variant-numeric:tabular-nums;color:var(--dsw-alias-label-secondary);font-size:10px;}
 .dsh-bc16-log-label{color:var(--dsw-alias-label-primary);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 .dsh-bc16-log-sub{color:var(--dsw-alias-label-secondary);font-size:10px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-.dsh-bc16-log-error{color:var(--dsw-alias-state-error-primary);font-size:10px;line-height:1.45;word-break:break-word;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+.dsh-bc16-log-icon{width:28px;height:28px;flex:0 0 auto;margin-top:3px;display:flex;align-items:center;justify-content:center;border:1px solid var(--dsw-alias-border-l1);border-radius:6px;background:var(--dsw-alias-bg-layer-2);color:var(--dsw-alias-label-secondary);font-size:13px;line-height:1;}
+.dsh-bc16-log-age{padding:9px 0 4px;font-size:10px;font-weight:600;letter-spacing:.02em;color:var(--dsw-alias-label-secondary);}
+.dsh-bc16-log-error{color:var(--dsw-alias-state-error-primary);font-family:ui-monospace,SFMono-Regular,Consolas,monospace;font-size:10px;line-height:1.45;word-break:break-word;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
 .dsh-bc16-errors{position:absolute;top:34px;right:0;z-index:20;width:min(380px,calc(100vw - 48px));max-height:340px;overflow:auto;padding:10px;border:1px solid var(--dsw-alias-border-l2);border-radius:10px;background:var(--dsw-alias-bg-layer-1);box-shadow:0 12px 32px rgba(0,0,0,.35);}
 .dsh-bc16-error-line{padding:6px 0;border-bottom:1px solid var(--dsw-alias-border-l1);font-size:11px;line-height:1.5;color:var(--dsw-alias-state-error-primary);word-break:break-word;}
 .dsh-bc16-error-line:last-child{border-bottom:0;}
@@ -1720,7 +1740,27 @@ window.__ModuleLoader__.load({
       const [overviewBusy, setOverviewBusy] = useState(null)
       const [notice, setNotice] = useState(null)
       const [panelWidth, setPanelWidth] = useState(0)
+      const [conversations, setConversations] = useState([])
+      const [conversationsLoaded, setConversationsLoaded] = useState(false)
+      const [newOpen, setNewOpen] = useState(false)
       const pageRef = useRef(null)
+      const newRef = useRef(null)
+
+      const loadConversations = async () => {
+        try {
+          const response = await fetch(`${BASE}sessions`, { cache: 'no-store' })
+          if (!response.ok) throw new Error(`sessions ${response.status}`)
+          const payload = await response.json()
+          const rows = Array.isArray(payload?.sessions) ? payload.sessions : []
+          setConversations(rows)
+          setConversationsLoaded(true)
+          return rows
+        } catch {
+          setConversations([])
+          setConversationsLoaded(true)
+          return []
+        }
+      }
 
       useEffect(() => {
         const id = setInterval(() => setNow(Date.now()), 1000)
@@ -1739,15 +1779,30 @@ window.__ModuleLoader__.load({
       }, [])
 
       useEffect(() => {
-        if (menuId === null && !errorOpen) return undefined
+        void loadConversations()
+      }, [])
+
+      useEffect(() => {
+        if (menuId === null && !errorOpen && !newOpen) return undefined
         const onKey = (event) => {
           if (event.key !== 'Escape') return
           setMenuId(null)
           setErrorOpen(false)
+          setNewOpen(false)
         }
         window.addEventListener('keydown', onKey)
         return () => window.removeEventListener('keydown', onKey)
-      }, [menuId, errorOpen])
+      }, [menuId, errorOpen, newOpen])
+
+      useEffect(() => {
+        if (!newOpen) return undefined
+        const onPointerDown = (event) => {
+          if (newRef.current !== null && newRef.current.contains(event.target)) return
+          setNewOpen(false)
+        }
+        document.addEventListener('pointerdown', onPointerDown)
+        return () => document.removeEventListener('pointerdown', onPointerDown)
+      }, [newOpen])
 
       useEffect(() => {
         if (menuId === null) setCloseArmedId(null)
@@ -1844,13 +1899,35 @@ window.__ModuleLoader__.load({
         setErrorOpen(false)
       }
 
-      const newBrowser = () => {
-        const target = props.sessionId ?? activeId
-        if (target === null || target === undefined) {
-          setNotice(t('v16.noSession'))
+      const directTarget = props.sessionId ?? activeId
+      const canStartNew = (directTarget !== null && directTarget !== undefined)
+        || !conversationsLoaded
+        || conversations.length > 0
+
+      const openConversation = (sessionId) => {
+        setNewOpen(false)
+        setNotice(null)
+        void overviewAct('open', sessionId, { select: true })
+      }
+
+      const newBrowser = async () => {
+        setNotice(null)
+        if (directTarget !== null && directTarget !== undefined) {
+          openConversation(directTarget)
           return
         }
-        void overviewAct('open', target, { select: true })
+        const rows = await loadConversations()
+        if (rows.length === 0) {
+          setNotice(t('v16.noConversations'))
+          return
+        }
+        if (rows.length === 1) {
+          openConversation(rows[0].sessionId)
+          return
+        }
+        setMenuId(null)
+        setErrorOpen(false)
+        setNewOpen(true)
       }
 
       const focusLive = async () => {
@@ -1914,6 +1991,42 @@ window.__ModuleLoader__.load({
           ))),
       )
 
+      const groupedActivity = []
+      for (const entry of selectedActivity) {
+        const previous = groupedActivity[groupedActivity.length - 1]
+        if (entry.kind === 'network') {
+          if (previous?.kind === 'networkGroup'
+            && previous.source === entry.source
+            && previous.at - entry.at <= 15_000) {
+            previous.count += 1
+            previous.entries.push(entry)
+            previous.at = Math.max(previous.at, entry.at)
+          } else {
+            groupedActivity.push({
+              kind: 'networkGroup',
+              count: 1,
+              at: entry.at,
+              source: entry.source,
+              page: entry.page,
+              entries: [entry],
+              id: `network-${entry.id}`,
+            })
+          }
+          continue
+        }
+        groupedActivity.push(entry)
+      }
+      const logIcon = (kind) => ({
+        network: '⇄',
+        console: '>',
+        click: '▸',
+        scroll: '↕',
+        screenshot: '▣',
+        assert: '✓',
+        type: '⌨',
+      }[kind] ?? '•')
+      let lastLogAge = null
+
       const rail = railOpen
         ? h('aside', { className: 'dsh-bc16-rail', 'aria-label': t('v16.log') },
             h('div', { className: 'dsh-bc16-rail-head' },
@@ -1923,23 +2036,33 @@ window.__ModuleLoader__.load({
             h('div', { className: 'dsh-bc16-rail-list' },
               selectedActivity.length === 0
                 ? h('div', { className: 'dsh-bc16-empty-body', style: { padding: '8px 0' } }, t('v16.logEmpty'))
-                : selectedActivity.map((entry) => {
-                    const label = activityLabel(t, entry)
+                : groupedActivity.map((entry) => {
+                    const age = ageLabel(entry.at)
+                    const showAge = age !== '' && age !== lastLogAge
+                    if (showAge) lastLogAge = age
+                    const isGroup = entry.kind === 'networkGroup'
+                    const label = isGroup
+                      ? t('v16.networkGroup', { count: entry.count })
+                      : activityLabel(t, entry)
                     const source = entry.source === 'human' ? t('activity.you') : t('activity.agent')
                     const pageName = entry.page !== null && entry.page !== undefined && typeof entry.page === 'object'
                       ? (entry.page.title !== '' ? entry.page.title : shorten(entry.page.url, 40))
                       : ''
-                    return h('div', { className: 'dsh-bc16-log', key: entry.id },
-                      entry.hasThumb === true
-                        ? h('div', { className: 'dsh-bc16-log-thumb' }, h('img', { src: `${BASE}thumb/${entry.id}`, alt: label, loading: 'lazy' }))
-                        : null,
-                      h('div', { className: 'dsh-bc16-log-body' },
-                        h('div', { className: 'dsh-bc16-log-time' }, formatClock(entry.at)),
-                        h('div', { className: 'dsh-bc16-log-label', title: label }, label),
-                        h('div', { className: 'dsh-bc16-log-sub' }, pageName === '' ? source : `${source} · ${shorten(pageName, 26)}`),
-                        entry.status === 'error' && typeof entry.error === 'string' && entry.error !== ''
-                          ? h('div', { className: 'dsh-bc16-log-error' }, shorten(entry.error, 120))
-                          : null,
+                    const hasThumb = !isGroup && entry.hasThumb === true
+                    return h('div', { key: entry.id, className: 'dsh-bc16-log-unit' },
+                      showAge ? h('div', { className: 'dsh-bc16-log-age' }, age) : null,
+                      h('div', { className: 'dsh-bc16-log' },
+                        hasThumb
+                          ? h('div', { className: 'dsh-bc16-log-thumb' }, h('img', { src: `${BASE}thumb/${entry.id}`, alt: label, loading: 'lazy' }))
+                          : h('div', { className: 'dsh-bc16-log-icon', 'aria-hidden': true }, logIcon(isGroup ? 'network' : entry.kind)),
+                        h('div', { className: 'dsh-bc16-log-body' },
+                          h('div', { className: 'dsh-bc16-log-time' }, formatClock(entry.at)),
+                          h('div', { className: 'dsh-bc16-log-label', title: label }, label),
+                          h('div', { className: 'dsh-bc16-log-sub' }, pageName === '' ? source : `${source} · ${shorten(pageName, 26)}`),
+                          entry.status === 'error' && typeof entry.error === 'string' && entry.error !== ''
+                            ? h('div', { className: 'dsh-bc16-log-error' }, shorten(entry.error, 120))
+                            : null,
+                        ),
                       ),
                     )
                   }),
@@ -2074,14 +2197,46 @@ window.__ModuleLoader__.load({
               }, '▤')
             : null,
           !single
-            ? h('button', {
-                className: 'dsh-bc16-icon',
-                type: 'button',
-                'aria-label': t('v16.new'),
-                title: t('v16.new'),
-                disabled: (props.sessionId ?? activeId) === null || (props.sessionId ?? activeId) === undefined,
-                onClick: newBrowser,
-              }, '+')
+            ? h('div', { className: 'dsh-bc16-new', ref: newRef },
+                h('button', {
+                  className: 'dsh-bc16-icon',
+                  type: 'button',
+                  'aria-label': t('v16.new'),
+                  'aria-expanded': newOpen,
+                  title: canStartNew ? t('v16.new') : t('v16.newEmpty'),
+                  disabled: !canStartNew,
+                  onClick: (event) => {
+                    event.stopPropagation()
+                    if (!canStartNew) return
+                    setMenuId(null)
+                    setErrorOpen(false)
+                    if (newOpen) {
+                      setNewOpen(false)
+                      return
+                    }
+                    void newBrowser()
+                  },
+                }, '+'),
+                newOpen
+                  ? h('div', { className: 'dsh-bc16-newmenu', role: 'menu', onClick: (event) => event.stopPropagation() },
+                      h('div', { className: 'dsh-bc16-new-head' }, t('v16.newTitle')),
+                      conversations.length === 0
+                        ? h('div', { className: 'dsh-bc16-new-empty' }, t('v16.newEmpty'))
+                        : conversations.map((row) => h('button', {
+                            key: row.sessionId,
+                            type: 'button',
+                            role: 'menuitem',
+                            className: 'dsh-bc16-new-item',
+                            onClick: () => openConversation(row.sessionId),
+                          },
+                            h('span', { className: 'dsh-bc16-new-title', title: row.title }, row.title),
+                            row.hasBrowser
+                              ? h('span', { className: 'dsh-bc16-new-tag' }, t('v16.hasBrowser'))
+                              : null,
+                          )),
+                    )
+                  : null,
+              )
             : null,
           single
             ? h('button', {
@@ -2108,7 +2263,13 @@ window.__ModuleLoader__.load({
       const empty = h('div', { className: 'dsh-bc16-empty' },
         h('div', { className: 'dsh-bc16-empty-title' }, t('v16.emptyTitle')),
         h('div', { className: 'dsh-bc16-empty-body' }, t('v16.emptyBody')),
-        h('button', { className: 'dsh-bc16-btn is-live', type: 'button', onClick: newBrowser }, t('v16.emptyCta')),
+        h('button', {
+          className: 'dsh-bc16-btn is-live',
+          type: 'button',
+          disabled: !canStartNew,
+          title: canStartNew ? t('v16.new') : t('v16.newEmpty'),
+          onClick: () => void newBrowser(),
+        }, t('v16.emptyCta')),
       )
 
       const body = overviewSessions.length === 0

@@ -1,6 +1,6 @@
 {
   "name": "dsh-browser-cockpit",
-  "version": "1.6.0",
+  "version": "1.6.1",
   "private": true,
   "type": "module",
   "description": "A live Chrome cockpit for DeepSeek Harness agents: browser tools, a side-by-side live view, and an activity log.",

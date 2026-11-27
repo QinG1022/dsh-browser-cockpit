@@ -21,11 +21,11 @@ Agents are good at reading source code and bad at seeing a running interface. Th
 - **Bounded output**: snapshot line/node caps, a 6k-character default for `browser_eval`, truncated network bodies, and console/eval markers instead of dumping huge values into the conversation.
 - **Live view** in the right sidebar, side by side with the conversation, streamed over SSE with a JPEG polling fallback; frames are coalesced to about 8 fps so a static page cannot flood the Host.
 - **Two panel states**: the wide Browser panel shows a live grid of every conversation with a browser open; selecting a card opens a single-session view with a 48px toolbar, a 720px live preview, and a 300px activity rail. The rail collapses below 1100px and remembers your choice.
-- **Session overview**: one card per open browser with a per-session error badge, title, URL, last activity, a `⋯` menu (zoom, open in the right tab, copy address, close with confirmation), and a `+` button for the current conversation. Cards are capped at six.
+- **Session overview**: one card per open browser with a per-session error badge, title, URL, last activity, a `⋯` menu (zoom, open in the right tab, copy address, close with confirmation), and a `+` button that opens the current conversation or offers a conversation picker when the panel is global. Cards are capped at six.
 - **Per-session isolation**: each conversation gets its own Chrome browser context — cookies, localStorage and cache are separate, so two accounts can be tested at once without logging each other out. The right tab and pill still show only this session.
 - **Read-only preview, explicit live view**: the panel preview never steals the agent's active page; pressing *Live view* is the explicit switch, and the panel says so.
 - **Per-session console**: each context keeps its own console errors even while another conversation is active, so card badges and the toolbar error count stay real instead of showing the active page's errors everywhere.
-- **Activity log** — every action with its time, duration, result, page, new page errors, and a thumbnail you can enlarge. Rows are informational; replay is intentionally not part of this release.
+- **Activity log** — every action with its time, duration, result, page, new page errors; screenshot rows carry an 84×53 thumbnail, other rows a type icon, consecutive network reads collapse into “Network × N”, and rows are grouped by relative time. Rows are informational; replay is intentionally not part of this release.
 - **Auto-open**: the right tab appears on the agent's first browser action in a session; close it and a status pill takes over.
 - **Status pill** above the composer: `Agent now: click “Save”` / `Just now: screenshot` with a thumbnail and a *View* button.
 - **Session-aware**: the tab and pill show only this session; an inactive page is never shown as live. The wide left panel is the cross-session overview.
@@ -36,7 +36,7 @@ Agents are good at reading source code and bad at seeing a running interface. Th
 
 ![Architecture](docs/architecture.svg)
 
-The Host half runs a dedicated Chrome and exposes `browser_*` tools plus loopback JSON routes (`state`, `activity`, `frame.jpg`, `stream`, `thumb`, `action`, `overview`, `overview/frame.jpg`, `overview/stream`, `overview/action`, and `session/frame.jpg`). The Client half is a small React panel backed by one shared feed: it registers the left-sidebar entry, the right-sidebar tab, the session-header icon, and the composer pill. The wide left panel has two states: a grid of every session with an open browser, and a single-session view with a preview and activity rail. The right tab shows the current session's page and activity. Screenshots from tools become durable attachments, so the agent sees the image in the conversation.
+The Host half runs a dedicated Chrome and exposes `browser_*` tools plus loopback JSON routes (`state`, `activity`, `frame.jpg`, `stream`, `thumb`, `action`, `sessions`, `overview`, `overview/frame.jpg`, `overview/stream`, `overview/action`, and `session/frame.jpg`). The Client half is a small React panel backed by one shared feed: it registers the left-sidebar entry, the right-sidebar tab, the session-header icon, and the composer pill. The wide left panel has two states: a grid of every session with an open browser, and a single-session view with a preview and activity rail. The right tab shows the current session's page and activity. Screenshots from tools become durable attachments, so the agent sees the image in the conversation.
 
 ## Requirements
 
@@ -214,7 +214,7 @@ lib/browser.js      CDP browser contexts: launch, per-session pages, snapshot, c
 lib/locators.js     Target locator parsing and page-side role/text matching
 lib/cdp.js          Minimal WebSocket CDP transport (Node's built-in WebSocket)
 lib/tools.js        Agent tool definitions + activity instrumentation
-lib/routes.js       Loopback routes (state, frame, stream, activity, thumb, action, overview, overview/stream, overview/action, session/frame.jpg)
+lib/routes.js       Loopback routes (state, frame, stream, activity, thumb, action, sessions, overview, overview/stream, overview/action, session/frame.jpg)
 lib/activity.js     In-memory activity log and thumbnails
 lib/targets.js      URL normalization and one-time Harness sign-in
 docs/               Architecture artwork

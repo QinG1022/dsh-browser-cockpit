@@ -54,6 +54,28 @@ const sessions = [
 ]
 let activeSessionId = 'lab-session-a'
 
+function conversations() {
+  const open = new Set(sessions.map((entry) => entry.sessionId))
+  return {
+    activeSessionId,
+    sessions: [
+      ...sessions.map((entry, index) => ({
+        sessionId: entry.sessionId,
+        title: entry.title,
+        hasBrowser: open.has(entry.sessionId),
+        createdAt: Date.now() - index * 60_000,
+      })),
+      ...(open.has('lab-session-new') ? [] : [{
+        sessionId: 'lab-session-new',
+        title: '尚未打开浏览器的会话',
+        hasBrowser: false,
+        createdAt: Date.now() + 1,
+      }]),
+    ],
+    updatedAt: Date.now(),
+  }
+}
+
 function overview() {
   return {
     activeSessionId,
@@ -153,6 +175,10 @@ const server = http.createServer(async (req, res) => {
     serveFile(res, path.join(LAB, 'vendor', 'react-dom.js'), 'text/javascript; charset=utf-8')
     return
   }
+  if (req.method === 'GET' && pathname === '/plugin/browser-control/sessions') {
+    json(res, 200, conversations())
+    return
+  }
   if (req.method === 'GET' && pathname === '/plugin/browser-control/overview') {
     json(res, 200, overview())
     return
@@ -194,10 +220,14 @@ const server = http.createServer(async (req, res) => {
   if (req.method === 'GET' && pathname === '/plugin/browser-control/activity') {
     json(res, 200, {
       entries: [
-        { id: 2, at: Date.now() - 1_500, finishedAt: Date.now() - 1_200, source: 'agent', sessionId: 'lab-session-a', tool: 'browser_click', label: 'Click “Save”', status: 'ok', hasThumb: false },
-        { id: 1, at: Date.now() - 4_000, finishedAt: Date.now() - 3_900, source: 'agent', sessionId: 'lab-session-a', tool: 'browser_open', label: 'Open demo', status: 'ok', hasThumb: false },
+        { id: 6, at: Date.now() - 300, source: 'agent', sessionId: 'lab-session-a', tool: 'browser_network', kind: 'network', detail: { action: 'list' }, status: 'ok', hasThumb: false },
+        { id: 5, at: Date.now() - 600, source: 'agent', sessionId: 'lab-session-a', tool: 'browser_network', kind: 'network', detail: { action: 'detail' }, status: 'ok', hasThumb: false },
+        { id: 4, at: Date.now() - 900, source: 'agent', sessionId: 'lab-session-a', tool: 'browser_network', kind: 'network', detail: { action: 'list' }, status: 'ok', hasThumb: false },
+        { id: 3, at: Date.now() - 1_200, source: 'agent', sessionId: 'lab-session-a', tool: 'browser_network', kind: 'network', detail: { action: 'list' }, status: 'ok', hasThumb: false },
+        { id: 2, at: Date.now() - 1_500, finishedAt: Date.now() - 1_200, source: 'agent', sessionId: 'lab-session-a', tool: 'browser_click', kind: 'click', detail: { target: 'Save' }, status: 'ok', hasThumb: false },
+        { id: 1, at: Date.now() - 4_000, finishedAt: Date.now() - 3_900, source: 'agent', sessionId: 'lab-session-a', tool: 'browser_open', kind: 'open', detail: { url: 'https://example.test/app' }, status: 'ok', hasThumb: false },
       ],
-      lastId: 2,
+      lastId: 6,
       current: null,
     })
     return
@@ -231,13 +261,15 @@ const server = http.createServer(async (req, res) => {
     } else if (body.action === 'open' && !sessions.some((entry) => entry.sessionId === sessionId)) {
       sessions.push({
         sessionId,
-        title: `Local session ${sessionId}`,
+        title: sessionId === 'lab-session-new' ? '尚未打开浏览器的会话' : `Local session ${sessionId}`,
         url: 'about:blank',
         pageTitle: '',
         running: true,
         phase: 'running',
         active: true,
       })
+      activeSessionId = sessionId
+    } else if (body.action === 'open' && sessions.some((entry) => entry.sessionId === sessionId)) {
       activeSessionId = sessionId
     }
     json(res, 200, { ok: true, overview: overview() })

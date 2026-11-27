@@ -21,11 +21,11 @@
 - **输出有上限**：快照行数/节点数上限、`browser_eval` 默认 6k 字符、网络响应体截断、控制台/脚本结果带截断标记，避免大对象淹没对话。
 - **实时画面**：右侧栏与对话并排，优先走 SSE 推流，失败时回退到 JPEG 轮询；帧率合并到约 8 fps，静态页面不会把 Host 刷爆。
 - **宽面板双状态**：宽版「浏览器」面板平时是所有已打开会话的实时网格；点开一张卡进入单会话视图，包含 48px 工具栏、720px 实时预览和 300px 操作记录栏。面板宽度不足 1100px 时记录栏自动收起，手动选择会被记住。
-- **会话总览**：每张卡显示标题、URL、最后活动、实时缩略图和该会话的错误角标；`⋯` 菜单提供放大、在右栏打开、复制地址和确认关闭；`+` 为当前会话新开浏览器。最多 6 个。
+- **会话总览**：每张卡显示标题、URL、最后活动、实时缩略图和该会话的错误角标；`⋯` 菜单提供放大、在右栏打开、复制地址和确认关闭；`+` 为当前会话新开浏览器，面板不在具体会话里时会列出可选的对话。最多 6 个。
 - **按会话隔离上下文**：每个会话拥有独立的 Chrome browser context，Cookie、localStorage 和缓存互不影响，可以同时登录两个账号而不互相踢下线。右侧栏和胶囊仍只看当前会话。
 - **只读预览，显式实时查看**：面板预览不会抢走智能体当前活动页；只有点「实时查看」才会切换，按钮和提示都写清楚了。
 - **按会话保留控制台**：每个上下文单独保存控制台错误，其他会话活跃时也不会串台，卡片角标和工具栏错误数始终真实。
-- **操作记录**：每一步的时间、耗时、结果、页面、新增报错，并附可放大的缩略图；本版只做信息展示，不做点击回放。
+- **操作记录**：每一步的时间、耗时、结果、页面、新增报错；截图行带 84×53 缩略图，非截图行显示类型图标，连续网络请求合并为「网络 × N」，并按时间分组；本版只做信息展示，不做点击回放。
 - **自动打开**：会话里第一次操作浏览器时右侧栏自动展开；关掉后由状态胶囊接管。
 - **状态胶囊**：输入框上方显示「智能体正在：点击『保存』」或「刚刚：截图」，带缩略图和「查看画面」。
 - **按会话隔离页面**：右侧栏和胶囊只看当前会话，其他会话的页面不会被当成实时画面；宽版左侧面板负责跨会话总览。
@@ -36,7 +36,7 @@
 
 ![架构图](docs/architecture.svg)
 
-Host 半边运行一个独立 Chrome，注册 `browser_*` 工具和回环 JSON 路由（`state`、`activity`、`frame.jpg`、`stream`、`thumb`、`action`、`overview`、`overview/frame.jpg`、`overview/stream`、`overview/action`，以及 `session/frame.jpg`）。Client 半边是一个小 React 面板，由一个共享数据源驱动：注册左侧栏入口、右侧栏标签、会话标题栏图标和输入框胶囊。宽版左侧面板有两种状态：所有已打开浏览器会话的网格，以及带预览和操作记录栏的单会话视图；右侧栏展示当前会话的页面和操作记录。工具截图会作为持久附件进入对话，所以智能体能在对话里直接看到图片。
+Host 半边运行一个独立 Chrome，注册 `browser_*` 工具和回环 JSON 路由（`state`、`activity`、`frame.jpg`、`stream`、`thumb`、`action`、`sessions`、`overview`、`overview/frame.jpg`、`overview/stream`、`overview/action`，以及 `session/frame.jpg`）。Client 半边是一个小 React 面板，由一个共享数据源驱动：注册左侧栏入口、右侧栏标签、会话标题栏图标和输入框胶囊。宽版左侧面板有两种状态：所有已打开浏览器会话的网格，以及带预览和操作记录栏的单会话视图；右侧栏展示当前会话的页面和操作记录。工具截图会作为持久附件进入对话，所以智能体能在对话里直接看到图片。
 
 ## 环境要求
 
@@ -214,7 +214,7 @@ lib/browser.js      CDP 浏览器上下文：启动、每会话页面、快照�
 lib/locators.js     定位串解析与页面内 role/text 匹配
 lib/cdp.js          最小 WebSocket CDP 传输（Node 内置 WebSocket）
 lib/tools.js        工具定义与活动埋点
-lib/routes.js       回环路由（state、frame、stream、activity、thumb、action、overview、overview/stream、overview/action、session/frame.jpg）
+lib/routes.js       回环路由（state、frame、stream、activity、thumb、action、sessions、overview、overview/stream、overview/action、session/frame.jpg）
 lib/activity.js     内存操作日志与缩略图
 lib/targets.js      URL 规范化和 Harness 一次性登录
 docs/               架构图
