@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Browser cockpit — local UI lab</title>
+  <style>
+    :root {
+      --dsw-alias-bg-base: #17181c;
+      --dsw-alias-bg-layer-1: #202126;
+      --dsw-alias-bg-layer-2: #282a30;
+      --dsw-alias-bg-overlay: rgba(13, 14, 18, 0.86);
+      --dsw-alias-border-l1: #353840;
+      --dsw-alias-border-l2: #4a4e58;
+      --dsw-alias-label-primary: #e8eaf0;
+      --dsw-alias-label-secondary: #a1a6b2;
+      --dsw-alias-brand-primary: #8ab4ff;
+      --dsw-alias-state-success-primary: #58c98a;
+      --dsw-alias-state-warn-primary: #eab308;
+      --dsw-alias-state-error-primary: #ef6b6b;
+      --dsw-alias-state-idle-primary: #6b7280;
+    }
+    * { box-sizing: border-box; }
+    html, body, #app { height: 100%; margin: 0; }
+    body { background: var(--dsw-alias-bg-base); color: var(--dsw-alias-label-primary); font-family: ui-sans-serif, system-ui, "Segoe UI", sans-serif; }
+    #lab-note { position: fixed; right: 10px; bottom: 8px; z-index: 20; font-size: 11px; color: var(--dsw-alias-label-secondary); opacity: .7; pointer-events: none; }
+  </style>
+</head>
+<body>
+  <div id="app"></div>
+  <div id="lab-note">local overview harness · mock API · not DSH</div>
+  <script src="/vendor/react.js"></script>
+  <script src="/vendor/react-dom.js"></script>
+  <script>
+    window.__ModuleLoader__ = {
+      load(definition) { window.__bcDefinition = definition },
+    }
+  </script>
+  <script src="/client.js"></script>
+  <script>
+    (() => {
+      const definition = window.__bcDefinition
+      if (definition === undefined) {
+        document.getElementById('app').textContent = 'client module did not load'
+        return
+      }
+      const React = window.React
+      const ReactDOM = window.ReactDOM
+      const h = React.createElement
+      const components = new Map()
+      const dictionaries = new Map()
+      const locale = {
+        register(namespace, dict) {
+          dictionaries.set(namespace, dict)
+          return () => {}
+        },
+        bind(namespace) {
+          return (key, vars) => {
+            const dict = dictionaries.get(namespace) ?? {}
+            let value = dict[key] ?? key
+            if (vars !== undefined) {
+              for (const [name, replacement] of Object.entries(vars)) {
+                value = value.split(`{${name}}`).join(String(replacement))
+              }
+            }
+            return value
+          }
+        },
+      }
+      const ctx = {
+        effect(fn) {
+          const cleanup = fn()
+          return typeof cleanup === 'function' ? cleanup : () => {}
+        },
+        locale,
+        slots: {
+          inject(name, callback) {
+            callback({
+              register(slot, component) { components.set(slot.name, component) },
+            })
+          },
+          register(slot, component) { components.set(slot.name, component) },
+        },
+        inject() {},
+      }
+      const module = definition.factory((id) => {
+        if (id === 'react') return React
+        throw new Error(`unexpected require: ${id}`)
+      })
+      module.apply(ctx)
+      const Panel = components.get('main')
+      if (typeof Panel !== 'function') {
+        document.getElementById('app').textContent = 'main panel was not registered'
+        return
+      }
+      const root = ReactDOM.createRoot(document.getElementById('app'))
+      root.render(h(Panel, { t: locale.bind('browserControl') }))
+      window.__bcLabReady = true
+    })()
+  </script>
+</body>
+</html>

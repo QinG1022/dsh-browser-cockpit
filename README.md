@@ -20,10 +20,12 @@ Agents are good at reading source code and bad at seeing a running interface. Th
 - **Actionable failures**: a failed tool call ends with a `Next:` suggestion — fresh snapshot for stale refs, a narrower locator, `allowFileUrls`/`allowedHosts`, a dialog handler, a timeout change, or `browser_console`/`browser_network` for the cause.
 - **Bounded output**: snapshot line/node caps, a 6k-character default for `browser_eval`, truncated network bodies, and console/eval markers instead of dumping huge values into the conversation.
 - **Live view** in the right sidebar, side by side with the conversation, streamed over SSE with a JPEG polling fallback.
+- **Session overview**: the wide Browser panel becomes a live grid of every conversation that has a browser open, with one card per session, a live thumbnail, focus and close actions. Cards are capped at six; only open browsers appear.
+- **Per-session isolation**: each conversation gets its own Chrome browser context — cookies, localStorage and cache are separate, so two accounts can be tested at once without logging each other out. The right tab and pill still show only this session.
 - **Activity log** — every action with its time, duration, result, page, new page errors, and a thumbnail you can enlarge.
 - **Auto-open**: the right tab appears on the agent's first browser action in a session; close it and a status pill takes over.
 - **Status pill** above the composer: `Agent now: click “Save”` / `Just now: screenshot` with a thumbnail and a *View* button.
-- **Session-aware**: each conversation gets its own page in the shared browser profile; the tab and pill show only this session, and an inactive page is never shown as live. The left panel keeps the full history and the current page.
+- **Session-aware**: the tab and pill show only this session; an inactive page is never shown as live. The wide left panel is the cross-session overview.
 - **Real input**: clicks and typing are browser-level events, so React state, focus, validation, and hover behave like a person.
 - **Local only**: dedicated Chrome profile, loopback-only panel routes, no telemetry, no external services.
 
@@ -31,7 +33,7 @@ Agents are good at reading source code and bad at seeing a running interface. Th
 
 ![Architecture](docs/architecture.svg)
 
-The Host half runs a dedicated Chrome and exposes `browser_*` tools plus loopback JSON routes (`state`, `activity`, `frame.jpg`, `stream`, `thumb`, `action`). The Client half is a small React panel backed by one shared feed: it registers the left-sidebar entry, the right-sidebar tab, the session-header icon, and the composer pill. Screenshots from tools become durable attachments, so the agent sees the image in the conversation.
+The Host half runs a dedicated Chrome and exposes `browser_*` tools plus loopback JSON routes (`state`, `activity`, `frame.jpg`, `stream`, `thumb`, `action`, plus `overview`, `overview/frame.jpg`, `overview/stream`, `overview/action`). The Client half is a small React panel backed by one shared feed: it registers the left-sidebar entry, the right-sidebar tab, the session-header icon, and the composer pill. The wide left panel shows an overview grid of every session with an open browser; the right tab shows the current session's page and activity. Screenshots from tools become durable attachments, so the agent sees the image in the conversation.
 
 ## Requirements
 
@@ -78,7 +80,7 @@ The right tab opens with the live page; the agent reads the outline, clicks, typ
 
 | Surface | What it shows |
 |---|---|
-| **Left sidebar → Browser** | Full-page cockpit: address bar, open/reload, viewport presets, live view, and the complete activity rail. Use it for hands-on control. |
+| **Left sidebar → Browser** | Wide cockpit: a live overview grid of every conversation with a browser open, then the address bar, open/reload, viewport presets, live view, and the complete activity rail. Use it for hands-on control. |
 | **Right sidebar → Browser tab** | Compact cockpit beside the conversation: the current session's live page on top, this session's activity with thumbnails below. If another conversation is driving the visible page, it shows a quiet inactive state instead of misleading live frames. |
 | **Session header icon** | One click to reveal the right tab. |
 | **Composer pill** | Appears when the right tab is not visible: `Agent now: …` / `Just now: …`, a thumbnail, and *View*. Auto-opens the tab when the agent starts working. |
@@ -117,7 +119,7 @@ Closing the right tab is remembered for that session, so it will not pop open ag
 | `browser_performance` | Lightweight LCP, CLS, approximate INP, long tasks, navigation timing, resource count, and Chrome runtime metrics. |
 | `browser_screenshot` | Capture the viewport, the whole page, or one element by target/ref/selector. |
 | `browser_resize` | Change the viewport size (320–3840 × 240–2160). |
-| `browser_close` | Close the browser; the next tool call starts a fresh one. |
+| `browser_close` | Close this conversation's browser page. Other conversations keep their contexts; the next browser tool here starts a fresh page. |
 
 ## Configuration
 
@@ -176,12 +178,13 @@ Environment fallbacks: `DSH_BROWSER_PATH` and `DSH_BROWSER_PROFILE`.
 
 ## Limitations
 
-- One shared Chrome process; each conversation is mapped to its own page/tab with shared cookies. A tab that is not the active page is hidden from the right tab and cannot stream until that conversation drives the browser.
+- One shared Chrome process, up to six isolated browser contexts. Each conversation's context has separate cookies, localStorage, and cache, but a Chrome process crash affects all of them. The overview grid shows only conversations with an open browser; closing one card disposes that context without touching the others.
+- The overview captures each session with `Page.captureScreenshot` about once per second, so cards are near-live rather than frame-accurate; only the active page has the full right-tab SSE stream. More than six contexts are refused.
 - Network capture is per current page, in memory, capped at 300 requests; bodies are read on demand and binary bodies are decoded as text, which may be lossy.
 - Route mocks apply to the controlled browser (including subresources) while enabled; they are not a system proxy and do not affect other apps. Route rules survive tab switches but are not persisted across restarts.
-- Cookies and storage calls act on the current origin unless a URL is given; both live in the dedicated profile and are not a substitute for a real auth/session test suite. Storage-state export covers cookies plus the current origin's localStorage.
+- Cookies and storage calls act on the current context's origin unless a URL is given; each session has its own context, so two sessions can hold different accounts without logging each other out. Storage-state export covers cookies plus the current origin's localStorage.
 - Downloads are collected from the controlled page with Chrome's download events; a canceled download keeps a record but has no file. Paths use the page's suggested filename, so name collisions can overwrite earlier files.
-- Idle cleanup closes the browser after `idleTimeoutMs` of no tool calls; the next call starts a fresh one. Set `0` if you need it to stay up between long gaps.
+- Idle cleanup closes the whole browser after `idleTimeoutMs` of no tool calls; the next call starts fresh contexts. Set `0` if you need it to stay up between long gaps.
 - `secrets` redaction is literal and global within this browser session; rotate a leaked test token rather than relying on redaction alone.
 - Snapshot refs are valid for the snapshot that produced them; re-snapshot after navigation or large DOM changes. Locator strings (`role=`, `text=`, `label=`, `testid=`) are more stable than refs across small updates.
 - `browser_assert` polls until the timeout (3 seconds by default); it deliberately returns `FAIL` for a false condition rather than throwing.
@@ -192,7 +195,7 @@ Environment fallbacks: `DSH_BROWSER_PATH` and `DSH_BROWSER_PROFILE`.
 - Drag is a mouse-button drag; native HTML5 drag-and-drop may not fire drag events.
 - Chrome's native `<select>` popups and OS dialogs are outside the page and cannot be driven. JavaScript alert/confirm/prompt are handled: dismissed by default, accepted with `dialogBehavior: accept`, or answered with `browser_handle_dialog` under `manual`.
 - The right tab only renders in the conversation view; switching to another main panel hides the right column (the pill returns when you are back).
-- The activity feed is shared by the whole process; the left panel shows everything and follows the active page, while the tab and pill show only actions attributed to the current session. Panel/CLI actions carry no session id and appear only in the left panel.
+- The activity feed is shared by the whole process; the wide panel shows everything and the overview grid, while the tab and pill show only actions attributed to the current session. Panel/CLI actions carry no session id and appear only in the wide panel.
 - The right tab appears automatically once per session; a session where you closed it stays quiet.
 - Screenshots are capped at 1600 px on the long side for the agent and 480 px for activity thumbnails.
 - If the DevTools socket drops but Chrome is still running, the next tool call reconnects to the same page; if the page crashed, a fresh `about:blank` page is used.
@@ -202,11 +205,11 @@ Environment fallbacks: `DSH_BROWSER_PATH` and `DSH_BROWSER_PROFILE`.
 ```text
 index.js            Host plugin: one BrowserSession, tools, routes
 client.js           Client plugin: sidebar entry, panel, right tab, header icon, pill
-lib/browser.js      CDP page: launch, navigate, snapshot, click, type, capture
+lib/browser.js      CDP browser contexts: launch, per-session pages, snapshot, click, type, capture
 lib/locators.js     Target locator parsing and page-side role/text matching
 lib/cdp.js          Minimal WebSocket CDP transport (Node's built-in WebSocket)
 lib/tools.js        Agent tool definitions + activity instrumentation
-lib/routes.js       Loopback panel routes (state, frame, stream, activity, thumb, action)
+lib/routes.js       Loopback routes (state, frame, stream, activity, thumb, action, overview, overview/stream, overview/action)
 lib/activity.js     In-memory activity log and thumbnails
 lib/targets.js      URL normalization and one-time Harness sign-in
 docs/               Architecture artwork
@@ -216,7 +219,8 @@ docs/               Architecture artwork
 - `npm run check` validates syntax for the Host, client, and every `lib/` module.
 - `npm test` validates the 29 tool schemas, the actionable-error rules, and renders the left panel once in a React stand-in to catch broken component references.
 - `node dev-check/tools-schema.mjs` can be run directly; GitHub Actions runs `npm run check` and `npm test` on Node 22.
-- Standalone smoke scripts are kept in a local scratch directory during development, not committed; they launch a headless Chrome against a temporary test page and exercise navigation, snapshot, locators, assertions, network/styles/emulation/performance, highlight/routes/cookies/storage/downloads/idle cleanup, forms, tabs, dialogs, frames, sessions, reconnect, and crash recovery.
+- `npm run lab` serves a standalone mock of the panel API and renders the real `client.js` in a normal Chrome tab. Use it to inspect the overview and panel layout without loading the Harness UI inside the controlled browser.
+- Standalone smoke scripts are kept in a local scratch directory during development, not committed; they launch a headless Chrome against a temporary test page and exercise navigation, snapshot, locators, assertions, network/styles/emulation/performance, highlight/routes/cookies/storage/downloads/idle cleanup, forms, tabs, dialogs, frames, per-session contexts, overview SSE, reconnect, and crash recovery.
 - After editing **Host** files, uninstall and reinstall the bundle (the Loader keeps the previous module generation otherwise). After editing **Client** files, refresh the DSH window. Profile metadata changes need a restart.
 
 ## Troubleshooting

@@ -173,6 +173,17 @@ window.__ModuleLoader__.load({
       panel: 'Browser',
       title: 'Browser cockpit',
       subtitle: 'Inspect a running local page in Chrome together with the agent. The live view below is exactly what the agent sees; type an address here or ask in the conversation.',
+      'overview.title': 'Conversations with a browser',
+      'overview.count': '{count} live',
+      'overview.empty': 'No conversation has opened a browser yet. Open an address below, or ask the agent to open one.',
+      'overview.noFrame': 'Waiting for a frame…',
+      'overview.active': 'Active',
+      'overview.inactive': 'Idle',
+      'overview.focus': 'Show',
+      'overview.close': 'Close',
+      'overview.justNow': 'just now',
+      'overview.seconds': '{count}s ago',
+      'overview.minutes': '{count}m ago',
       'status.running': 'Running',
       'status.starting': 'Starting',
       'status.failed': 'Failed',
@@ -278,6 +289,17 @@ window.__ModuleLoader__.load({
       panel: '浏览器',
       title: '浏览器驾驶舱',
       subtitle: '和智能体一起在本地 Chrome 里查看正在运行的页面。下面的实时画面就是智能体看到的画面；可以在上方输入地址，也可以直接在对话里让智能体打开。',
+      'overview.title': '已打开浏览器的会话',
+      'overview.count': '{count} 个',
+      'overview.empty': '还没有会打开浏览器。可以在下方输入地址，或让智能体先打开一个页面。',
+      'overview.noFrame': '正在等待画面…',
+      'overview.active': '当前',
+      'overview.inactive': '空闲',
+      'overview.focus': '查看',
+      'overview.close': '关闭',
+      'overview.justNow': '刚刚',
+      'overview.seconds': '{count} 秒前',
+      'overview.minutes': '{count} 分钟前',
       'status.running': '运行中',
       'status.starting': '启动中',
       'status.failed': '启动失败',
@@ -388,6 +410,29 @@ window.__ModuleLoader__.load({
 .dsh-bc-title-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
 .dsh-bc-title{margin:0;font-size:20px;font-weight:600;line-height:1.3;}
 .dsh-bc-sub{margin:0;font-size:12.5px;line-height:1.6;color:var(--dsw-alias-label-secondary);max-width:680px;}
+.dsh-bc-overview{flex:0 0 auto;min-width:0;display:flex;flex-direction:column;gap:8px;}
+.dsh-bc-overview-head{display:flex;align-items:baseline;justify-content:space-between;gap:10px;min-width:0;}
+.dsh-bc-overview-title{margin:0;font-size:13px;font-weight:600;line-height:1.3;}
+.dsh-bc-overview-count{font-size:11.5px;color:var(--dsw-alias-label-secondary);white-space:nowrap;}
+.dsh-bc-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:8px;max-height:264px;overflow:auto;padding-bottom:2px;}
+.dsh-bc-card{display:flex;flex-direction:column;gap:5px;min-width:0;padding:7px 8px 8px;border:1px solid var(--dsw-alias-border-l1);border-radius:10px;background:var(--dsw-alias-bg-layer-1);cursor:pointer;text-align:left;font-family:inherit;color:inherit;}
+.dsh-bc-card:hover{border-color:var(--dsw-alias-border-l2);background:var(--dsw-alias-bg-layer-2);}
+.dsh-bc-card.is-active{border-color:var(--dsw-alias-brand-primary);box-shadow:0 0 0 1px var(--dsw-alias-brand-primary) inset;}
+.dsh-bc-card:focus-visible{outline:2px solid var(--dsw-alias-brand-primary);outline-offset:1px;}
+.dsh-bc-card-head{display:flex;align-items:center;gap:6px;min-width:0;}
+.dsh-bc-card-title{font-size:12px;font-weight:600;line-height:1.35;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1 1 auto;min-width:0;}
+.dsh-bc-card-badge{font-size:10px;line-height:1;padding:3px 5px;border-radius:4px;background:var(--dsw-alias-bg-layer-2);color:var(--dsw-alias-label-secondary);flex:0 0 auto;white-space:nowrap;}
+.dsh-bc-card-badge.is-active{background:var(--dsw-alias-brand-primary);color:var(--dsw-alias-bg-base);}
+.dsh-bc-card-frame{width:100%;height:96px;object-fit:cover;object-position:top left;border-radius:6px;border:1px solid var(--dsw-alias-border-l1);background:var(--dsw-alias-bg-layer-2);display:block;}
+.dsh-bc-card-placeholder{height:96px;display:flex;align-items:center;justify-content:center;border-radius:6px;border:1px dashed var(--dsw-alias-border-l2);color:var(--dsw-alias-label-secondary);font-size:11px;background:var(--dsw-alias-bg-layer-2);}
+.dsh-bc-card-url{font-size:10.5px;line-height:1.4;color:var(--dsw-alias-label-secondary);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.dsh-bc-card-foot{display:flex;align-items:center;gap:6px;min-width:0;}
+.dsh-bc-card-age{font-size:10px;color:var(--dsw-alias-label-secondary);white-space:nowrap;flex:0 0 auto;}
+.dsh-bc-card-actions{margin-left:auto;display:flex;gap:4px;flex:0 0 auto;}
+.dsh-bc-card-btn{height:22px;padding:0 7px;border:1px solid var(--dsw-alias-border-l1);border-radius:6px;background:var(--dsw-alias-bg-base);color:var(--dsw-alias-label-secondary);font-size:10.5px;font-family:inherit;cursor:pointer;white-space:nowrap;}
+.dsh-bc-card-btn:hover:not(:disabled){color:var(--dsw-alias-label-primary);background:var(--dsw-alias-bg-layer-2);}
+.dsh-bc-card-btn:disabled{opacity:.5;cursor:default;}
+.dsh-bc-overview-empty{padding:12px 14px;border:1px dashed var(--dsw-alias-border-l1);border-radius:10px;color:var(--dsw-alias-label-secondary);font-size:12px;line-height:1.6;}
 .dsh-bc-status{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--dsw-alias-label-secondary);white-space:nowrap;flex:0 0 auto;}
 .dsh-bc-bar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;flex:0 0 auto;}
 .dsh-bc-input{flex:1 1 260px;min-width:180px;height:32px;padding:0 12px;font-size:13px;border-radius:10px;border:1px solid var(--dsw-alias-border-l2);background:var(--dsw-alias-bg-layer-1);color:var(--dsw-alias-label-primary);outline:none;box-sizing:border-box;font-family:inherit;}
@@ -829,6 +874,88 @@ window.__ModuleLoader__.load({
       return { frameUrl, frameAt }
     }
 
+    /** All conversations that currently own a browser context, with live frames. */
+    function useOverviewFeed() {
+      const [overview, setOverview] = useState({ sessions: [], activeSessionId: null })
+      const [frames, setFrames] = useState({})
+      const [connected, setConnected] = useState(false)
+      useEffect(() => {
+        let alive = true
+        let source = null
+        let retry
+        const acceptSessions = (next) => {
+          if (!alive || next === null || typeof next !== 'object' || !Array.isArray(next.sessions)) return
+          setOverview({ sessions: next.sessions.slice(0, 6), activeSessionId: next.activeSessionId ?? null })
+        }
+        const acceptFrame = (payload) => {
+          if (!alive || typeof payload?.sessionId !== 'string' || typeof payload?.jpeg !== 'string') return
+          const url = `data:image/jpeg;base64,${payload.jpeg}`
+          setFrames((previous) => ({ ...previous, [payload.sessionId]: url }))
+        }
+        const refresh = async () => {
+          try {
+            const response = await fetch(`${BASE}overview`, { cache: 'no-store' })
+            if (!response.ok) throw new Error(`HTTP ${response.status}`)
+            const next = await response.json()
+            acceptSessions(next)
+            for (const entry of next.sessions ?? []) {
+              if (typeof entry.sessionId !== 'string') continue
+              fetch(`${BASE}overview/frame.jpg?sessionId=${encodeURIComponent(entry.sessionId)}`, { cache: 'no-store' })
+                .then((frame) => frame.ok ? frame.blob() : null)
+                .then((blob) => {
+                  if (!alive || blob === null) return
+                  const reader = new FileReader()
+                  reader.onload = () => {
+                    if (!alive || typeof reader.result !== 'string') return
+                    setFrames((previous) => ({ ...previous, [entry.sessionId]: reader.result }))
+                  }
+                  reader.readAsDataURL(blob)
+                })
+                .catch(() => {})
+            }
+          } catch {
+            if (alive) setConnected(false)
+          }
+        }
+        const start = () => {
+          if (!alive) return
+          try {
+            source = new EventSource(`${BASE}overview/stream`)
+            source.onopen = () => { if (alive) setConnected(true) }
+            source.addEventListener('sessions', (event) => {
+              try { acceptSessions(JSON.parse(event.data)) } catch { /* ignore a malformed frame */ }
+            })
+            source.addEventListener('frame', (event) => {
+              try { acceptFrame(JSON.parse(event.data)) } catch { /* ignore a malformed frame */ }
+            })
+            source.addEventListener('error', () => {
+              if (!alive) return
+              setConnected(false)
+              source?.close()
+              source = null
+              retry = setTimeout(() => { void refresh().finally(start) }, 3000)
+            })
+          } catch {
+            source = null
+            retry = setTimeout(() => { void refresh().finally(start) }, 3000)
+          }
+        }
+        void refresh()
+        start()
+        const onOverview = (event) => {
+          if (event instanceof CustomEvent) acceptSessions(event.detail)
+        }
+        window.addEventListener('dsh-bc-overview', onOverview)
+        return () => {
+          alive = false
+          clearTimeout(retry)
+          source?.close()
+          window.removeEventListener('dsh-bc-overview', onOverview)
+        }
+      }, [])
+      return { overview, frames, connected }
+    }
+
     /** State, activity, and live frames for the compact right-sidebar tab. */
     function useBrowserTabFeed(sessionId) {
       const feed = useSharedFeed()
@@ -1060,10 +1187,12 @@ window.__ModuleLoader__.load({
         return value
       }
       const feed = useSharedFeed()
+      const overviewFeed = useOverviewFeed()
       const { state, activity, current: currentAction, offline } = feed
       const [now, setNow] = useState(Date.now())
       const [address, setAddress] = useState(() => readLastUrl())
       const [busyAction, setBusyAction] = useState(null)
+      const [overviewBusy, setOverviewBusy] = useState(null)
       const [notice, setNotice] = useState(null)
       const [expanded, setExpanded] = useState(null)
       const addressEdited = useRef(false)
@@ -1132,6 +1261,29 @@ window.__ModuleLoader__.load({
         void act({ action: 'open', url: address })
       }
 
+      const overviewAct = async (action, sessionId) => {
+        if (overviewBusy !== null) return
+        setOverviewBusy(sessionId)
+        setNotice(null)
+        try {
+          const response = await fetch(`${BASE}overview/action`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action, sessionId }),
+          })
+          const payload = await response.json().catch(() => null)
+          if (!response.ok || payload?.ok !== true) throw new Error(payload?.error ?? `HTTP ${response.status}`)
+          if (payload.overview !== undefined) {
+            window.dispatchEvent(new CustomEvent('dsh-bc-overview', { detail: payload.overview }))
+          }
+          if (action === 'focus' && typeof props.onOpenRight === 'function') props.onOpenRight()
+        } catch (error) {
+          setNotice(error instanceof Error ? error.message : String(error))
+        } finally {
+          setOverviewBusy(null)
+        }
+      }
+
       const submit = (event) => {
         event.preventDefault()
         openAddress()
@@ -1196,6 +1348,71 @@ window.__ModuleLoader__.load({
         )
       })()
 
+      const ageLabel = (at) => {
+        if (typeof at !== 'number' || !Number.isFinite(at) || at <= 0) return ''
+        const seconds = Math.max(0, Math.floor((now - at) / 1000))
+        if (seconds < 5) return t('overview.justNow')
+        if (seconds < 60) return t('overview.seconds', { count: seconds })
+        return t('overview.minutes', { count: Math.floor(seconds / 60) })
+      }
+      const overviewSessions = overviewFeed.overview.sessions
+      const overviewSection = h('section', { className: 'dsh-bc-overview', 'aria-label': t('overview.title') },
+        h('div', { className: 'dsh-bc-overview-head' },
+          h('h2', { className: 'dsh-bc-overview-title' }, t('overview.title')),
+          h('span', { className: 'dsh-bc-overview-count' }, t('overview.count', { count: overviewSessions.length })),
+        ),
+        overviewSessions.length === 0
+          ? h('div', { className: 'dsh-bc-overview-empty' }, t('overview.empty'))
+          : h('div', { className: 'dsh-bc-grid' },
+            overviewSessions.map((entry) => {
+              const busy = overviewBusy === entry.sessionId
+              const label = typeof entry.title === 'string' && entry.title !== '' ? entry.title : `Session ${entry.sessionId.slice(-6)}`
+              const frame = overviewFeed.frames[entry.sessionId]
+              return h('article', {
+                key: entry.sessionId,
+                className: `dsh-bc-card${entry.active ? ' is-active' : ''}`.trim(),
+                role: 'button',
+                tabIndex: 0,
+                'aria-label': `${label} — ${entry.url || ''}`,
+                onClick: () => void overviewAct('focus', entry.sessionId),
+                onKeyDown: (event) => {
+                  if (event.key === 'Enter' || event.key === ' ') {
+                    event.preventDefault()
+                    void overviewAct('focus', entry.sessionId)
+                  }
+                },
+              },
+              h('div', { className: 'dsh-bc-card-head' },
+                h('span', { className: `dsh-bc-dot ${entry.running ? 'is-running' : ''}`.trim() }),
+                h('span', { className: 'dsh-bc-card-title', title: label }, label),
+                h('span', { className: `dsh-bc-card-badge${entry.active ? ' is-active' : ''}`.trim() }, entry.active ? t('overview.active') : t('overview.inactive')),
+              ),
+              frame !== undefined
+                ? h('img', { className: 'dsh-bc-card-frame', src: frame, alt: '', draggable: false })
+                : h('div', { className: 'dsh-bc-card-placeholder' }, t('overview.noFrame')),
+              h('div', { className: 'dsh-bc-card-url', title: entry.url || '' }, entry.url || 'about:blank'),
+              h('div', { className: 'dsh-bc-card-foot' },
+                h('span', { className: 'dsh-bc-card-age' }, ageLabel(entry.lastActivityAt ?? entry.createdAt)),
+                h('div', { className: 'dsh-bc-card-actions' },
+                  h('button', {
+                    className: 'dsh-bc-card-btn',
+                    type: 'button',
+                    disabled: busy,
+                    onClick: (event) => { event.stopPropagation(); void overviewAct('focus', entry.sessionId) },
+                  }, t('overview.focus')),
+                  h('button', {
+                    className: 'dsh-bc-card-btn',
+                    type: 'button',
+                    disabled: busy,
+                    onClick: (event) => { event.stopPropagation(); void overviewAct('close', entry.sessionId) },
+                  }, t('overview.close')),
+                ),
+              ),
+              )
+            }),
+          ),
+      )
+
       return h('div', { className: 'dsh-bc-page' },
         h('style', null, CSS),
         h('div', { className: 'dsh-bc-head' },
@@ -1217,6 +1434,7 @@ window.__ModuleLoader__.load({
           h('span', null, notice),
           h('button', { type: 'button', onClick: () => setNotice(null) }, t('notice.dismiss')),
         ),
+        overviewSection,
         h('form', { className: 'dsh-bc-bar', onSubmit: submit },
           h('input', {
             className: 'dsh-bc-input',

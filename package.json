@@ -1,6 +1,6 @@
 {
   "name": "dsh-browser-cockpit",
-  "version": "1.4.1",
+  "version": "1.5.0",
   "private": true,
   "type": "module",
   "description": "A live Chrome cockpit for DeepSeek Harness agents: browser tools, a side-by-side live view, and an activity log.",
@@ -30,7 +30,8 @@
   },
   "scripts": {
     "check": "node --check index.js && node --check client.js && node --check lib/browser.js && node --check lib/cdp.js && node --check lib/locators.js && node --check lib/routes.js && node --check lib/targets.js && node --check lib/activity.js && node --check lib/tools.js",
-    "test": "node dev-check/tools-schema.mjs && node dev-check/error-hints.mjs && node dev-check/client-smoke.mjs"
+    "test": "node dev-check/tools-schema.mjs && node dev-check/error-hints.mjs && node dev-check/client-smoke.mjs",
+    "lab": "node dev-check/lab/server.mjs"
   },
   "exports": {
     ".": "./index.js",

@@ -55,9 +55,27 @@ export function apply(ctx, config = {}) {
 
   const resolveTarget = createTargetResolver(ctx)
   const activity = new ActivityLog()
+  session.setSessionTitleResolver((sessionId) => {
+    try {
+      const sessions = ctx.get('sessions')
+      const live = sessions?.get?.(sessionId)
+      if (live === undefined) return null
+      const titles = ctx.get('sessionTitle')
+      const snapshot = titles?.get?.(live)
+      return typeof snapshot?.title === 'string' ? snapshot.title : null
+    } catch {
+      return null
+    }
+  })
   registerBrowserTools(ctx, session, resolveTarget, activity)
 
   ctx.inject(['webServer'], (scope) => {
+    try {
+      const origin = scope.webServer?.getOrigin?.()
+      if (typeof origin === 'string' && origin !== '') session.setSelfOrigins([origin])
+    } catch {
+      // A missing origin only disables the recursive-capture guard.
+    }
     scope.effect(() => registerPanelRoutes(scope, session, resolveTarget, activity), 'browser-control: panel routes')
   })
 }
