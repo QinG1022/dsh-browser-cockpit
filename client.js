@@ -308,6 +308,8 @@ window.__ModuleLoader__.load({
       'tab.empty': 'The browser is not running yet. Open the Browser panel, or ask the agent to open a page.',
       'tab.inactive': 'Another conversation is using the page',
       'tab.inactive.body': 'This conversation gets its own page when the agent next uses the browser. Open the Browser panel to watch the active conversation.',
+      'tab.none': 'No page yet',
+      'tab.none.body': 'Use a browser tool, or open the Browser panel to start a page for this conversation.',
       'tab.openPanel': 'Open the Browser panel',
       'tab.waiting': 'Waiting for the first action…',
       'tab.foot': '{url} · {width}×{height}',
@@ -455,6 +457,8 @@ window.__ModuleLoader__.load({
       'tab.empty': '浏览器还没启动。打开「浏览器」面板，或让智能体打开一个页面。',
       'tab.inactive': '另一个会话正在使用页面',
       'tab.inactive.body': '智能体下次操作浏览器时，本会话会获得自己的页面。打开「浏览器」面板可查看当前会话。',
+      'tab.none': '尚未打开浏览器',
+      'tab.none.body': '使用浏览器工具，或打开「浏览器」面板，为本会话新建浏览器。',
       'tab.openPanel': '打开「浏览器」面板',
       'tab.waiting': '等待第一步操作…',
       'tab.foot': '{url} · {width}×{height}',
@@ -1180,8 +1184,9 @@ window.__ModuleLoader__.load({
       const statusClass = phase === 'running' ? 'is-running' : phase === 'starting' ? 'is-starting' : phase === 'failed' || phase === 'offline' ? 'is-failed' : ''
       const statusLabel = t(phase === 'running' ? 'status.running' : phase === 'starting' ? 'status.starting' : phase === 'failed' ? 'status.failed' : phase === 'offline' ? 'status.offline' : 'status.stopped')
       const frameAge = feed.frameAt === 0 ? Number.POSITIVE_INFINITY : feed.now - feed.frameAt
+      const hasOtherActive = typeof feed.state?.activeSessionId === 'string' && feed.state.activeSessionId !== sessionId
       const badgeText = !feed.active
-        ? t('tab.inactive')
+        ? t(hasOtherActive ? 'tab.inactive' : 'tab.none')
         : phase === 'running'
           ? `${statusLabel} · ${frameAge < FRESH_MS ? t('stage.live') : t('stage.paused')}`
           : statusLabel
@@ -1212,7 +1217,7 @@ window.__ModuleLoader__.load({
                   h('button', { className: 'dsh-bc-btn', type: 'button', onClick: () => props.onOpenPanel?.() }, t('tab.openPanel')),
                 )
             : h('div', { className: 'dsh-bc-tab-empty' },
-                h('span', null, t('tab.inactive.body')),
+                h('span', null, t(hasOtherActive ? 'tab.inactive.body' : 'tab.none.body')),
                 h('button', { className: 'dsh-bc-btn', type: 'button', onClick: () => props.onOpenPanel?.() }, t('tab.openPanel')),
               ),
           h('div', { className: 'dsh-bc-tab-badge', role: 'status', 'aria-live': 'polite' },

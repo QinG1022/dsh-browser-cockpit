@@ -84,7 +84,7 @@ The right tab opens with the live page; the agent reads the outline, clicks, typ
 | Surface | What it shows |
 |---|---|
 | **Left sidebar → Browser** | Wide cockpit with two states. The grid shows every conversation with a browser open, per-session error badges, and a `⋯` menu per card. The single view shows the selected session's preview, a *Live view* switch, and a 300px activity rail. Navigation and hands-on control stay in the right tab. |
-| **Right sidebar → Browser tab** | Compact cockpit beside the conversation: the current session's live page on top, this session's activity with thumbnails below. If another conversation is driving the visible page, it shows a quiet inactive state instead of misleading live frames. |
+| **Right sidebar → Browser tab** | Compact cockpit beside the conversation: the current session's live page on top, this session's activity with thumbnails below. If another conversation is driving the visible page, it says so; if no page is active at all, it shows a separate “no page yet” state instead of claiming another conversation is using it. |
 | **Session header icon** | One click to reveal the right tab. |
 | **Composer pill** | Appears when the right tab is not visible: `Agent now: …` / `Just now: …`, a thumbnail, and *View*. Auto-opens the tab when the agent starts working. |
 
