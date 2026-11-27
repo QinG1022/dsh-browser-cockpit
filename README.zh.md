@@ -214,7 +214,7 @@ docs/               架构图
 
 - 无构建步骤、无 npm 依赖。
 - `npm run check` 检查 Host/Client/`lib/` 全部模块语法。
-- `npm test` 检查 29 个工具 schema 和错误建议规则；GitHub Actions 在 Node 22 上运行这两项。
+- `npm test` 检查 29 个工具 schema、错误建议规则，并用一个精简的 React 替身把左侧面板渲染一次，捕获组件里的未定义引用；GitHub Actions 在 Node 22 上运行这些检查。
 - `node dev-check/tools-schema.mjs` 可单独运行。
 - 独立冒烟脚本放在开发时的本地临时目录，不提交到仓库；它们会用无头 Chrome 打开临时测试页，覆盖导航、快照、定位、断言、网络/样式/模拟/性能、高亮/请求模拟/Cookie/存储/下载/空闲清理、表单、标签页、对话框、iframe、会话隔离、重连和崩溃恢复。
 - 改 **Host** 文件后需要卸载再重装 bundle（否则 Loader 会沿用旧的模块代次）；改 **Client** 文件后刷新 DSH 窗口；插件元数据变动需要重启应用。

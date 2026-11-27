@@ -214,7 +214,7 @@ docs/               Architecture artwork
 
 - No build step and no npm dependencies.
 - `npm run check` validates syntax for the Host, client, and every `lib/` module.
-- `npm test` validates the 29 tool schemas and the actionable-error rules.
+- `npm test` validates the 29 tool schemas, the actionable-error rules, and renders the left panel once in a React stand-in to catch broken component references.
 - `node dev-check/tools-schema.mjs` can be run directly; GitHub Actions runs `npm run check` and `npm test` on Node 22.
 - Standalone smoke scripts are kept in a local scratch directory during development, not committed; they launch a headless Chrome against a temporary test page and exercise navigation, snapshot, locators, assertions, network/styles/emulation/performance, highlight/routes/cookies/storage/downloads/idle cleanup, forms, tabs, dialogs, frames, sessions, reconnect, and crash recovery.
 - After editing **Host** files, uninstall and reinstall the bundle (the Loader keeps the previous module generation otherwise). After editing **Client** files, refresh the DSH window. Profile metadata changes need a restart.

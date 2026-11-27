@@ -149,6 +149,20 @@ window.__ModuleLoader__.load({
       notifyFeed()
     }
 
+    /**
+     * Restart the shared polling loops now. Bumping the generation retires the
+     * loops already in flight, so a manual retry never doubles them.
+     */
+    function refreshFeed() {
+      if (!FEED.active) return
+      FEED.offline = false
+      FEED.generation += 1
+      const generation = FEED.generation
+      notifyFeed()
+      pollFeedState(generation)
+      pollFeedActivity(generation)
+    }
+
     function useSharedFeed() {
       const [, setTick] = useState(0)
       useEffect(() => subscribeFeed(() => setTick((value) => value + 1)), [])
@@ -1067,6 +1081,8 @@ window.__ModuleLoader__.load({
         rememberLastUrl(url)
       }, [state?.url])
 
+      const running = state?.running === true
+      const phase = offline ? 'offline' : typeof state?.phase === 'string' ? state.phase : 'stopped'
       const busy = busyAction !== null
       const { frameUrl, frameAt } = useLiveFrame(running)
 
@@ -1153,7 +1169,7 @@ window.__ModuleLoader__.load({
           return h('div', { className: 'dsh-bc-center' },
             h('div', { className: 'dsh-bc-center-title' }, t('stage.offlineTitle')),
             h('div', { className: 'dsh-bc-center-body' }, t('stage.offlineBody')),
-            h('button', { className: 'dsh-bc-btn', type: 'button', onClick: () => setRefreshTick((value) => value + 1) }, t('stage.retry')),
+            h('button', { className: 'dsh-bc-btn', type: 'button', onClick: refreshFeed }, t('stage.retry')),
           )
         }
         if (phase === 'starting') {
