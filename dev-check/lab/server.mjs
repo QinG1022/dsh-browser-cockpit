@@ -40,6 +40,17 @@ const sessions = [
     phase: 'running',
     active: false,
   },
+  {
+    sessionId: 'lab-session-c',
+    title: '本地演示 · 会话 C',
+    url: 'https://example.test/docs',
+    pageTitle: 'Docs',
+    running: false,
+    phase: 'stopped',
+    active: false,
+    errorCount: 1,
+    recentErrors: [{ text: 'TypeError: demo failure', at: Date.now() - 5_000, url: 'https://example.test/docs' }],
+  },
 ]
 let activeSessionId = 'lab-session-a'
 
@@ -144,6 +155,13 @@ const server = http.createServer(async (req, res) => {
   }
   if (req.method === 'GET' && pathname === '/plugin/browser-control/overview') {
     json(res, 200, overview())
+    return
+  }
+  if (req.method === 'GET' && pathname === '/plugin/browser-control/session/frame.jpg') {
+    const sessionId = url.searchParams.get('sessionId') ?? ''
+    const buffer = frameFor(sessionId)
+    res.writeHead(200, { 'Content-Type': 'image/jpeg', 'Cache-Control': 'no-store' })
+    res.end(buffer)
     return
   }
   if (req.method === 'GET' && pathname === '/plugin/browser-control/overview/frame.jpg') {

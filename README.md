@@ -20,9 +20,12 @@ Agents are good at reading source code and bad at seeing a running interface. Th
 - **Actionable failures**: a failed tool call ends with a `Next:` suggestion — fresh snapshot for stale refs, a narrower locator, `allowFileUrls`/`allowedHosts`, a dialog handler, a timeout change, or `browser_console`/`browser_network` for the cause.
 - **Bounded output**: snapshot line/node caps, a 6k-character default for `browser_eval`, truncated network bodies, and console/eval markers instead of dumping huge values into the conversation.
 - **Live view** in the right sidebar, side by side with the conversation, streamed over SSE with a JPEG polling fallback; frames are coalesced to about 8 fps so a static page cannot flood the Host.
-- **Session overview**: the wide Browser panel becomes a live grid of every conversation that has a browser open, with one card per session, a live thumbnail, focus and close actions. Cards are capped at six; only open browsers appear.
+- **Two panel states**: the wide Browser panel shows a live grid of every conversation with a browser open; selecting a card opens a single-session view with a 48px toolbar, a 720px live preview, and a 300px activity rail. The rail collapses below 1100px and remembers your choice.
+- **Session overview**: one card per open browser with a per-session error badge, title, URL, last activity, a `⋯` menu (zoom, open in the right tab, copy address, close with confirmation), and a `+` button for the current conversation. Cards are capped at six.
 - **Per-session isolation**: each conversation gets its own Chrome browser context — cookies, localStorage and cache are separate, so two accounts can be tested at once without logging each other out. The right tab and pill still show only this session.
-- **Activity log** — every action with its time, duration, result, page, new page errors, and a thumbnail you can enlarge.
+- **Read-only preview, explicit live view**: the panel preview never steals the agent's active page; pressing *Live view* is the explicit switch, and the panel says so.
+- **Per-session console**: each context keeps its own console errors even while another conversation is active, so card badges and the toolbar error count stay real instead of showing the active page's errors everywhere.
+- **Activity log** — every action with its time, duration, result, page, new page errors, and a thumbnail you can enlarge. Rows are informational; replay is intentionally not part of this release.
 - **Auto-open**: the right tab appears on the agent's first browser action in a session; close it and a status pill takes over.
 - **Status pill** above the composer: `Agent now: click “Save”` / `Just now: screenshot` with a thumbnail and a *View* button.
 - **Session-aware**: the tab and pill show only this session; an inactive page is never shown as live. The wide left panel is the cross-session overview.
@@ -33,7 +36,7 @@ Agents are good at reading source code and bad at seeing a running interface. Th
 
 ![Architecture](docs/architecture.svg)
 
-The Host half runs a dedicated Chrome and exposes `browser_*` tools plus loopback JSON routes (`state`, `activity`, `frame.jpg`, `stream`, `thumb`, `action`, plus `overview`, `overview/frame.jpg`, `overview/stream`, `overview/action`). The Client half is a small React panel backed by one shared feed: it registers the left-sidebar entry, the right-sidebar tab, the session-header icon, and the composer pill. The wide left panel shows an overview grid of every session with an open browser; the right tab shows the current session's page and activity. Screenshots from tools become durable attachments, so the agent sees the image in the conversation.
+The Host half runs a dedicated Chrome and exposes `browser_*` tools plus loopback JSON routes (`state`, `activity`, `frame.jpg`, `stream`, `thumb`, `action`, `overview`, `overview/frame.jpg`, `overview/stream`, `overview/action`, and `session/frame.jpg`). The Client half is a small React panel backed by one shared feed: it registers the left-sidebar entry, the right-sidebar tab, the session-header icon, and the composer pill. The wide left panel has two states: a grid of every session with an open browser, and a single-session view with a preview and activity rail. The right tab shows the current session's page and activity. Screenshots from tools become durable attachments, so the agent sees the image in the conversation.
 
 ## Requirements
 
@@ -80,7 +83,7 @@ The right tab opens with the live page; the agent reads the outline, clicks, typ
 
 | Surface | What it shows |
 |---|---|
-| **Left sidebar → Browser** | Wide cockpit: a live overview grid of every conversation with a browser open, then the address bar, open/reload, viewport presets, live view, and the complete activity rail. Use it for hands-on control. |
+| **Left sidebar → Browser** | Wide cockpit with two states. The grid shows every conversation with a browser open, per-session error badges, and a `⋯` menu per card. The single view shows the selected session's preview, a *Live view* switch, and a 300px activity rail. Navigation and hands-on control stay in the right tab. |
 | **Right sidebar → Browser tab** | Compact cockpit beside the conversation: the current session's live page on top, this session's activity with thumbnails below. If another conversation is driving the visible page, it shows a quiet inactive state instead of misleading live frames. |
 | **Session header icon** | One click to reveal the right tab. |
 | **Composer pill** | Appears when the right tab is not visible: `Agent now: …` / `Just now: …`, a thumbnail, and *View*. Auto-opens the tab when the agent starts working. |
@@ -179,7 +182,9 @@ Environment fallbacks: `DSH_BROWSER_PATH` and `DSH_BROWSER_PROFILE`.
 ## Limitations
 
 - One shared Chrome process, up to six isolated browser contexts. Each conversation's context has separate cookies, localStorage, and cache, but a Chrome process crash affects all of them. The overview grid shows only conversations with an open browser; closing one card disposes that context without touching the others.
-- The overview captures each session with `Page.captureScreenshot` about once per second, so cards are near-live rather than frame-accurate; only the active page has the full right-tab SSE stream. More than six contexts are refused.
+- The grid captures each session at 720px (quality 52) on activity change or every six seconds, so cards are near-live rather than frame-accurate. The single view polls an on-demand 1280px preview every 1.5s; only the active page has the full right-tab SSE stream. More than six contexts are refused.
+- The wide panel is read-only by design: navigation, clicks and typing stay in the right tab or agent tools. The panel's *Live view* switch changes the agent's active page; the preview does not.
+- Each session keeps its own console ring (400 entries, newest three errors on its card). Errors clear on that session's main-frame navigation or when its context closes, not when another conversation becomes active.
 - Network capture is per current page, in memory, capped at 300 requests; bodies are read on demand and binary bodies are decoded as text, which may be lossy.
 - Route mocks apply to the controlled browser (including subresources) while enabled; they are not a system proxy and do not affect other apps. Route rules survive tab switches but are not persisted across restarts.
 - Cookies and storage calls act on the current context's origin unless a URL is given; each session has its own context, so two sessions can hold different accounts without logging each other out. Storage-state export covers cookies plus the current origin's localStorage.
@@ -209,7 +214,7 @@ lib/browser.js      CDP browser contexts: launch, per-session pages, snapshot, c
 lib/locators.js     Target locator parsing and page-side role/text matching
 lib/cdp.js          Minimal WebSocket CDP transport (Node's built-in WebSocket)
 lib/tools.js        Agent tool definitions + activity instrumentation
-lib/routes.js       Loopback routes (state, frame, stream, activity, thumb, action, overview, overview/stream, overview/action)
+lib/routes.js       Loopback routes (state, frame, stream, activity, thumb, action, overview, overview/stream, overview/action, session/frame.jpg)
 lib/activity.js     In-memory activity log and thumbnails
 lib/targets.js      URL normalization and one-time Harness sign-in
 docs/               Architecture artwork
@@ -219,8 +224,8 @@ docs/               Architecture artwork
 - `npm run check` validates syntax for the Host, client, and every `lib/` module.
 - `npm test` validates the 29 tool schemas, the actionable-error rules, and renders the left panel once in a React stand-in to catch broken component references.
 - `node dev-check/tools-schema.mjs` can be run directly; GitHub Actions runs `npm run check` and `npm test` on Node 22.
-- `npm run lab` serves a standalone mock of the panel API and renders the real `client.js` in a normal Chrome tab. Use it to inspect the overview and panel layout without loading the Harness UI inside the controlled browser.
-- Standalone smoke scripts are kept in a local scratch directory during development, not committed; they launch a headless Chrome against a temporary test page and exercise navigation, snapshot, locators, assertions, network/styles/emulation/performance, highlight/routes/cookies/storage/downloads/idle cleanup, forms, tabs, dialogs, frames, per-session contexts, overview SSE, reconnect, and crash recovery.
+- `npm run lab` serves a standalone mock of the panel API and renders the real `client.js` in a normal Chrome tab. It includes three demo sessions and a per-session error badge, so you can inspect the grid, single view, rail and preview without loading the Harness UI inside the controlled browser.
+- Standalone smoke scripts are kept in a local scratch directory during development, not committed; they launch a headless Chrome against a temporary test page and exercise navigation, snapshot, locators, assertions, network/styles/emulation/performance, highlight/routes/cookies/storage/downloads/idle cleanup, forms, tabs, dialogs, frames, per-session contexts, per-session console/preview errors, overview SSE, reconnect, and crash recovery.
 - After editing **Host** files, uninstall and reinstall the bundle (the Loader keeps the previous module generation otherwise). After editing **Client** files, refresh the DSH window. Profile metadata changes need a restart.
 
 ## Troubleshooting

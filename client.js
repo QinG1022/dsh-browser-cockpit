@@ -184,6 +184,32 @@ window.__ModuleLoader__.load({
       'overview.justNow': 'just now',
       'overview.seconds': '{count}s ago',
       'overview.minutes': '{count}m ago',
+      'v16.summary': '{count} browsers · {running} running',
+      'v16.new': 'New browser',
+      'v16.back': 'All browsers',
+      'v16.preview': 'Preview',
+      'v16.live': 'Live view',
+      'v16.liveHint': 'Live view switches the page the agent controls',
+      'v16.openRight': 'Open in side panel',
+      'v16.zoom': 'Zoom in',
+      'v16.copyUrl': 'Copy address',
+      'v16.closeSession': 'Close this conversation browser',
+      'v16.confirmClose': 'Close this conversation browser? Its pages and login state will be closed.',
+      'v16.confirmCloseShort': 'Confirm close',
+      'v16.emptyTitle': 'No browser open',
+      'v16.emptyBody': 'A browser appears here when the agent uses browser tools, or when you press +.',
+      'v16.emptyCta': 'New browser',
+      'v16.log': 'Activity',
+      'v16.logEmpty': 'No activity for this conversation yet.',
+      'v16.errors': 'Errors',
+      'v16.errorEmpty': 'No page errors.',
+      'v16.readonly': 'Read-only preview',
+      'v16.railShow': 'Show activity',
+      'v16.railHide': 'Hide activity',
+      'v16.menu': 'More',
+      'v16.noSession': 'No conversation is available for a new browser yet.',
+      'v16.close': 'Close',
+      'v16.cancel': 'Cancel',
       'status.running': 'Running',
       'status.starting': 'Starting',
       'status.failed': 'Failed',
@@ -300,6 +326,32 @@ window.__ModuleLoader__.load({
       'overview.justNow': '刚刚',
       'overview.seconds': '{count} 秒前',
       'overview.minutes': '{count} 分钟前',
+      'v16.summary': '{count} 个浏览器 · {running} 个运行中',
+      'v16.new': '新建浏览器',
+      'v16.back': '全部会话',
+      'v16.preview': '预览',
+      'v16.live': '实时查看',
+      'v16.liveHint': '实时查看会切换智能体正在操作的页面',
+      'v16.openRight': '在右栏打开',
+      'v16.zoom': '放大',
+      'v16.copyUrl': '复制地址',
+      'v16.closeSession': '关闭此会话浏览器',
+      'v16.confirmClose': '关闭这个会话的浏览器？该会话的页面和登录状态会一并关闭。',
+      'v16.confirmCloseShort': '确认关闭',
+      'v16.emptyTitle': '还没有浏览器',
+      'v16.emptyBody': '智能体使用浏览器工具，或点击 + 新建后，会在这里出现。',
+      'v16.emptyCta': '新建浏览器',
+      'v16.log': '操作记录',
+      'v16.logEmpty': '这个会话还没有操作记录。',
+      'v16.errors': '错误',
+      'v16.errorEmpty': '页面没有报错。',
+      'v16.readonly': '只读预览',
+      'v16.railShow': '显示操作记录',
+      'v16.railHide': '收起操作记录',
+      'v16.menu': '更多',
+      'v16.noSession': '现在没有可用于新建浏览器的会话。',
+      'v16.close': '关闭',
+      'v16.cancel': '取消',
       'status.running': '运行中',
       'status.starting': '启动中',
       'status.failed': '启动失败',
@@ -528,6 +580,80 @@ window.__ModuleLoader__.load({
 .dsh-bc-strip-thumb{width:44px;height:26px;object-fit:cover;object-position:top left;border-radius:4px;border:1px solid var(--dsw-alias-border-l1);cursor:pointer;flex:0 0 auto;background:var(--dsw-alias-bg-layer-2);}
 .dsh-bc-strip-view{border:0;background:transparent;color:var(--dsw-alias-label-primary);font:inherit;font-size:11.5px;cursor:pointer;padding:3px 9px 3px 6px;border-radius:999px;flex:0 0 auto;white-space:nowrap;}
 .dsh-bc-strip-view:hover{background:var(--dsw-alias-bg-layer-2);}
+`
+
+    const V16_CSS = `
+.dsh-bc-page.dsh-bc-v16{padding:0;gap:0;background:var(--dsw-alias-bg-base);}
+.dsh-bc16{height:100%;min-height:0;display:flex;flex-direction:column;background:var(--dsw-alias-bg-base);color:var(--dsw-alias-label-primary);overflow:hidden;}
+.dsh-bc16-toolbar{height:48px;flex:0 0 48px;display:flex;align-items:center;gap:8px;padding:0 14px;border-bottom:1px solid var(--dsw-alias-border-l1);background:var(--dsw-alias-bg-base);min-width:0;}
+.dsh-bc16-toolbar-main{display:flex;align-items:center;gap:8px;min-width:0;flex:1 1 auto;}
+.dsh-bc16-toolbar-side{display:flex;align-items:center;gap:6px;flex:0 0 auto;position:relative;}
+.dsh-bc16-icon{width:28px;height:28px;display:inline-flex;align-items:center;justify-content:center;border:1px solid transparent;border-radius:8px;background:transparent;color:var(--dsw-alias-label-secondary);cursor:pointer;font-family:inherit;font-size:15px;line-height:1;padding:0;flex:0 0 auto;}
+.dsh-bc16-icon:hover:not(:disabled){background:var(--dsw-alias-bg-layer-2);color:var(--dsw-alias-label-primary);}
+.dsh-bc16-icon:focus-visible,.dsh-bc16-btn:focus-visible,.dsh-bc16-tile:focus-visible{outline:2px solid var(--dsw-alias-brand-primary);outline-offset:2px;}
+.dsh-bc16-icon:disabled{opacity:.45;cursor:default;}
+.dsh-bc16-stat{display:flex;align-items:center;gap:7px;min-width:0;font-size:12px;color:var(--dsw-alias-label-secondary);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.dsh-bc16-title{font-size:13px;font-weight:600;color:var(--dsw-alias-label-primary);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:340px;}
+.dsh-bc16-sub{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.dsh-bc16-btn{height:28px;padding:0 10px;border:1px solid var(--dsw-alias-border-l1);border-radius:8px;background:var(--dsw-alias-bg-layer-1);color:var(--dsw-alias-label-primary);font-family:inherit;font-size:11.5px;cursor:pointer;white-space:nowrap;}
+.dsh-bc16-btn:hover:not(:disabled){background:var(--dsw-alias-bg-layer-2);border-color:var(--dsw-alias-border-l2);}
+.dsh-bc16-btn:disabled{opacity:.45;cursor:default;}
+.dsh-bc16-btn.is-live{border-color:var(--dsw-alias-brand-primary);color:var(--dsw-alias-brand-primary);}
+.dsh-bc16-body{flex:1 1 auto;min-height:0;display:flex;gap:14px;padding:16px 18px;overflow:hidden;}
+.dsh-bc16-grid-wrap{flex:1 1 auto;min-width:0;min-height:0;overflow:auto;padding:2px 2px 10px;}
+.dsh-bc16-grid{display:flex;flex-wrap:wrap;justify-content:center;align-content:flex-start;gap:14px;min-height:0;}
+.dsh-bc16-tile{position:relative;flex:0 0 auto;aspect-ratio:1.61;min-width:170px;max-width:640px;border:1px solid var(--dsw-alias-border-l1);border-radius:12px;overflow:visible;background:var(--dsw-alias-bg-layer-1);cursor:pointer;isolation:isolate;padding:0;font-family:inherit;color:inherit;text-align:left;transition:border-color .15s ease,transform .15s ease;}
+.dsh-bc16-tile:hover{border-color:var(--dsw-alias-border-l2);transform:translateY(-1px);}
+.dsh-bc16-tile.is-active{border-color:var(--dsw-alias-brand-primary);box-shadow:0 0 0 1px var(--dsw-alias-brand-primary) inset;}
+.dsh-bc16-tile.is-menu{z-index:12;}
+.dsh-bc16-tile-media{position:absolute;inset:0;overflow:hidden;border-radius:11px;background:var(--dsw-alias-bg-layer-2);}
+.dsh-bc16-tile-frame{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:top left;background:var(--dsw-alias-bg-layer-2);display:block;}
+.dsh-bc16-tile-shade{position:absolute;inset:0;background:linear-gradient(180deg,rgba(10,14,22,.42) 0%,rgba(10,14,22,.02) 32%,rgba(10,14,22,.02) 48%,rgba(10,14,22,.88) 100%);pointer-events:none;}
+.dsh-bc16-tile-top{position:absolute;top:0;left:0;right:0;display:flex;align-items:center;gap:6px;padding:10px 11px;z-index:2;min-width:0;}
+.dsh-bc16-tile-top .dsh-bc16-icon{color:#f3f5f9;background:rgba(10,14,22,.28);border-color:rgba(255,255,255,.14);width:24px;height:24px;font-size:14px;}
+.dsh-bc16-tile-badge{font-size:10px;line-height:1;padding:4px 6px;border-radius:5px;background:rgba(10,14,22,.55);backdrop-filter:blur(6px);color:#f3f5f9;white-space:nowrap;flex:0 0 auto;}
+.dsh-bc16-tile-badge.is-active{background:var(--dsw-alias-brand-primary);color:var(--dsw-alias-bg-base);}
+.dsh-bc16-tile-error{display:inline-flex;align-items:center;gap:4px;height:20px;padding:0 6px;border-radius:5px;background:rgba(120,28,34,.55);color:#ffd7d9;font-size:10px;flex:0 0 auto;border:0;font-family:inherit;cursor:pointer;}
+.dsh-bc16-tile-bottom{position:absolute;left:0;right:0;bottom:0;padding:11px 12px 12px;z-index:2;color:#f7f8fb;min-width:0;}
+.dsh-bc16-tile-title{font-size:13px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-shadow:0 1px 3px rgba(0,0,0,.5);}
+.dsh-bc16-tile-url{font-size:10.5px;line-height:1.4;opacity:.78;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-top:2px;}
+.dsh-bc16-tile-empty{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:var(--dsw-alias-label-secondary);font-size:11.5px;background:var(--dsw-alias-bg-layer-2);}
+.dsh-bc16-menu{position:absolute;top:30px;right:8px;z-index:8;min-width:150px;padding:5px;border:1px solid var(--dsw-alias-border-l2);border-radius:9px;background:var(--dsw-alias-bg-layer-1);box-shadow:0 8px 24px rgba(0,0,0,.3);display:flex;flex-direction:column;gap:1px;}
+.dsh-bc16-menu button{display:block;width:100%;padding:7px 9px;border:0;border-radius:6px;background:transparent;color:var(--dsw-alias-label-primary);font-family:inherit;font-size:11.5px;text-align:left;cursor:pointer;white-space:nowrap;}
+.dsh-bc16-menu button:hover{background:var(--dsw-alias-bg-layer-2);}
+.dsh-bc16-menu button.is-danger{color:var(--dsw-alias-state-error-primary);}
+.dsh-bc16-empty{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;text-align:center;color:var(--dsw-alias-label-secondary);padding:28px;}
+.dsh-bc16-empty-title{font-size:15px;font-weight:600;color:var(--dsw-alias-label-primary);}
+.dsh-bc16-empty-body{font-size:12px;line-height:1.65;max-width:360px;}
+.dsh-bc16-empty .dsh-bc16-btn{margin-top:4px;}
+.dsh-bc16-stage{flex:1 1 auto;min-width:0;min-height:0;display:flex;flex-direction:column;gap:8px;overflow:hidden;}
+.dsh-bc16-canvas{position:relative;flex:1 1 auto;min-height:0;display:flex;align-items:center;justify-content:center;border:1px solid var(--dsw-alias-border-l1);border-radius:12px;background:var(--dsw-alias-bg-layer-2);overflow:hidden;}
+.dsh-bc16-canvas img{max-width:100%;max-height:100%;display:block;object-fit:contain;background:var(--dsw-alias-bg-layer-1);}
+.dsh-bc16-canvas-center{padding:24px;text-align:center;font-size:12.5px;line-height:1.6;color:var(--dsw-alias-label-secondary);max-width:420px;}
+.dsh-bc16-live-chip{position:absolute;top:10px;left:10px;display:inline-flex;align-items:center;gap:5px;padding:4px 8px;border-radius:6px;background:var(--dsw-alias-bg-overlay);border:1px solid var(--dsw-alias-border-l1);font-size:10.5px;color:var(--dsw-alias-label-primary);z-index:2;}
+.dsh-bc16-foot{flex:0 0 auto;display:flex;align-items:center;gap:14px;flex-wrap:wrap;font-size:11px;line-height:1.5;color:var(--dsw-alias-label-secondary);min-width:0;}
+.dsh-bc16-foot code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:10.5px;color:var(--dsw-alias-label-primary);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:320px;}
+.dsh-bc16-rail{flex:0 0 300px;min-width:0;min-height:0;display:flex;flex-direction:column;border-left:1px solid var(--dsw-alias-border-l1);padding-left:14px;overflow:hidden;}
+.dsh-bc16-rail-head{flex:0 0 auto;display:flex;align-items:center;justify-content:space-between;gap:8px;padding:1px 0 8px;font-size:11.5px;font-weight:600;color:var(--dsw-alias-label-secondary);}
+.dsh-bc16-rail-list{flex:1 1 auto;min-height:0;overflow:auto;padding-right:2px;}
+.dsh-bc16-log{display:flex;gap:8px;padding:7px 0;border-bottom:1px solid var(--dsw-alias-border-l1);min-width:0;}
+.dsh-bc16-log-thumb{width:84px;height:53px;flex:0 0 auto;border-radius:5px;overflow:hidden;border:1px solid var(--dsw-alias-border-l1);background:var(--dsw-alias-bg-layer-2);}
+.dsh-bc16-log-thumb img{width:100%;height:100%;display:block;object-fit:cover;object-position:top left;}
+.dsh-bc16-log-body{min-width:0;display:flex;flex-direction:column;gap:2px;font-size:11px;line-height:1.4;}
+.dsh-bc16-log-time{font-variant-numeric:tabular-nums;color:var(--dsw-alias-label-secondary);font-size:10px;}
+.dsh-bc16-log-label{color:var(--dsw-alias-label-primary);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.dsh-bc16-log-sub{color:var(--dsw-alias-label-secondary);font-size:10px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.dsh-bc16-log-error{color:var(--dsw-alias-state-error-primary);font-size:10px;line-height:1.45;word-break:break-word;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+.dsh-bc16-errors{position:absolute;top:34px;right:0;z-index:20;width:min(380px,calc(100vw - 48px));max-height:340px;overflow:auto;padding:10px;border:1px solid var(--dsw-alias-border-l2);border-radius:10px;background:var(--dsw-alias-bg-layer-1);box-shadow:0 12px 32px rgba(0,0,0,.35);}
+.dsh-bc16-error-line{padding:6px 0;border-bottom:1px solid var(--dsw-alias-border-l1);font-size:11px;line-height:1.5;color:var(--dsw-alias-state-error-primary);word-break:break-word;}
+.dsh-bc16-error-line:last-child{border-bottom:0;}
+.dsh-bc16-error-session{font-size:10px;color:var(--dsw-alias-label-secondary);margin-bottom:2px;}
+.dsh-bc16-error-empty{font-size:11.5px;color:var(--dsw-alias-label-secondary);padding:4px 0;}
+.dsh-bc16-notice{flex:0 0 auto;margin:8px 18px 0;padding:7px 10px;border-radius:8px;border:1px solid var(--dsw-alias-state-error-primary);color:var(--dsw-alias-state-error-primary);font-size:11.5px;display:flex;align-items:center;gap:8px;}
+.dsh-bc16-notice button{margin-left:auto;border:0;background:transparent;color:inherit;font:inherit;cursor:pointer;padding:2px 4px;}
+@media (max-width:1100px){.dsh-bc16-rail{display:none;}.dsh-bc16-body{padding:12px;}}
+@media (max-width:720px){.dsh-bc16-toolbar{padding:0 10px;gap:4px;}.dsh-bc16-title{max-width:180px;}.dsh-bc16-body{padding:8px;gap:8px;}.dsh-bc16-grid{gap:10px;}.dsh-bc16-tile{min-width:140px;}.dsh-bc16-foot{padding-bottom:2px;}}
+@media (prefers-reduced-motion:reduce){.dsh-bc16-tile{transition:none;}.dsh-bc16-tile:hover{transform:none;}}
 `
 
     /** Sidebar navigation glyph. */
@@ -954,6 +1080,52 @@ window.__ModuleLoader__.load({
         }
       }, [])
       return { overview, frames, connected }
+    }
+
+    /** Read-only preview of one conversation's page, independent of the active tab. */
+    function useSessionPreview(sessionId, enabled, width = 1280) {
+      const [frameUrl, setFrameUrl] = useState(null)
+      const [frameAt, setFrameAt] = useState(0)
+      const [failed, setFailed] = useState(false)
+      useEffect(() => {
+        if (!enabled || typeof sessionId !== 'string' || sessionId === '') {
+          setFrameUrl(null)
+          setFrameAt(0)
+          setFailed(false)
+          return undefined
+        }
+        let alive = true
+        let timer = null
+        let current = null
+        const tick = () => {
+          if (!alive) return
+          const url = `${BASE}session/frame.jpg?sessionId=${encodeURIComponent(sessionId)}&w=${width}&t=${Date.now()}`
+          const image = new Image()
+          current = image
+          image.onload = () => {
+            if (!alive || current !== image) return
+            setFailed(false)
+            setFrameUrl(url)
+            setFrameAt(Date.now())
+          }
+          image.onerror = () => {
+            if (!alive || current !== image) return
+            if (frameUrl === null) setFailed(true)
+          }
+          image.src = url
+        }
+        tick()
+        timer = setInterval(tick, 1500)
+        return () => {
+          alive = false
+          if (timer !== null) clearInterval(timer)
+          if (current !== null) {
+            current.onload = null
+            current.onerror = null
+          }
+        }
+      }, [sessionId, enabled, width])
+      return { frameUrl, frameAt, failed }
     }
 
     /** State, activity, and live frames for the compact right-sidebar tab. */
@@ -1514,6 +1686,476 @@ window.__ModuleLoader__.load({
       )
     }
 
+    function readPanelPreference(key, fallback) {
+      try {
+        const value = window.localStorage.getItem(key)
+        return value === null ? fallback : value
+      } catch {
+        return fallback
+      }
+    }
+
+    function writePanelPreference(key, value) {
+      try {
+        window.localStorage.setItem(key, value)
+      } catch {
+        // A host without storage keeps the in-memory state.
+      }
+    }
+
+    /** v1.6 two-state cockpit: a browser grid, or one focused read-only preview. */
+    function BrowserPanelV16(props) {
+      const t = makeTranslator(props)
+      const feed = useSharedFeed()
+      const overviewFeed = useOverviewFeed()
+      const { activity, current: currentAction, offline } = feed
+      const [now, setNow] = useState(Date.now())
+      const [view, setView] = useState(() => readPanelPreference('dsh.browser-cockpit.view', 'grid'))
+      const [selectedId, setSelectedId] = useState(null)
+      const [mode, setMode] = useState('preview')
+      const [railPref, setRailPref] = useState(() => readPanelPreference('dsh.browser-cockpit.rail', 'open') !== 'closed')
+      const [menuId, setMenuId] = useState(null)
+      const [closeArmedId, setCloseArmedId] = useState(null)
+      const [errorOpen, setErrorOpen] = useState(false)
+      const [overviewBusy, setOverviewBusy] = useState(null)
+      const [notice, setNotice] = useState(null)
+      const [panelWidth, setPanelWidth] = useState(0)
+      const pageRef = useRef(null)
+
+      useEffect(() => {
+        const id = setInterval(() => setNow(Date.now()), 1000)
+        return () => clearInterval(id)
+      }, [])
+
+      useEffect(() => {
+        const node = pageRef.current
+        if (node === null) return undefined
+        const measure = () => setPanelWidth(node.getBoundingClientRect().width)
+        measure()
+        if (typeof ResizeObserver !== 'function') return undefined
+        const observer = new ResizeObserver(measure)
+        observer.observe(node)
+        return () => observer.disconnect()
+      }, [])
+
+      useEffect(() => {
+        if (menuId === null && !errorOpen) return undefined
+        const onKey = (event) => {
+          if (event.key !== 'Escape') return
+          setMenuId(null)
+          setErrorOpen(false)
+        }
+        window.addEventListener('keydown', onKey)
+        return () => window.removeEventListener('keydown', onKey)
+      }, [menuId, errorOpen])
+
+      useEffect(() => {
+        if (menuId === null) setCloseArmedId(null)
+      }, [menuId])
+
+      const overviewSessions = overviewFeed.overview.sessions
+        .slice(0, 6)
+        .slice()
+        .sort((left, right) => Number(right.active) - Number(left.active) || Number(right.lastActivityAt ?? 0) - Number(left.lastActivityAt ?? 0))
+      const sessionsKey = overviewSessions.map((entry) => entry.sessionId).join('|')
+
+      useEffect(() => {
+        if (overviewSessions.length === 0) {
+          if (selectedId !== null) setSelectedId(null)
+          return
+        }
+        if (selectedId !== null && overviewSessions.some((entry) => entry.sessionId === selectedId)) return
+        setSelectedId(overviewFeed.overview.activeSessionId ?? overviewSessions[0].sessionId)
+      }, [sessionsKey, overviewFeed.overview.activeSessionId, selectedId])
+
+      useEffect(() => {
+        if (mode === 'live' && selectedId !== overviewFeed.overview.activeSessionId) setMode('preview')
+      }, [mode, selectedId, overviewFeed.overview.activeSessionId])
+
+      const activeId = overviewFeed.overview.activeSessionId
+      const selected = overviewSessions.find((entry) => entry.sessionId === selectedId) ?? null
+      const single = overviewSessions.length === 1 || (view === 'single' && selected !== null)
+      const runningCount = overviewSessions.filter((entry) => entry.running === true).length
+      const railOpen = single && panelWidth >= 1100 && railPref
+      const selectedIsActive = selected !== null && selected.sessionId === activeId
+      const live = useLiveFrame(single && mode === 'live' && selectedIsActive && feed.state?.running === true)
+      const preview = useSessionPreview(selected?.sessionId ?? null, single && selected !== null, 1280)
+      const displayFrame = mode === 'live' && live.frameUrl !== null ? live.frameUrl : preview.frameUrl
+      const displayAt = mode === 'live' && live.frameUrl !== null ? live.frameAt : preview.frameAt
+      const selectedActivity = selected === null
+        ? []
+        : activity.filter((entry) => entry.sessionId === selected.sessionId).slice(0, 40)
+      const selectedCurrent = currentAction !== null && selected !== null && currentAction.sessionId === selected.sessionId
+        ? currentAction
+        : null
+      const errorSessions = overviewSessions.filter((entry) => Number(entry.errorCount ?? 0) > 0)
+      const totalErrors = errorSessions.reduce((sum, entry) => sum + Number(entry.errorCount ?? 0), 0)
+
+      const ageLabel = (at) => {
+        if (typeof at !== 'number' || !Number.isFinite(at) || at <= 0) return ''
+        const seconds = Math.max(0, Math.floor((now - at) / 1000))
+        if (seconds < 5) return t('overview.justNow')
+        if (seconds < 60) return t('overview.seconds', { count: seconds })
+        return t('overview.minutes', { count: Math.floor(seconds / 60) })
+      }
+
+      const overviewAct = async (action, sessionId, options = {}) => {
+        if (overviewBusy !== null) return null
+        setOverviewBusy(sessionId)
+        setNotice(null)
+        try {
+          const response = await fetch(`${BASE}overview/action`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action, sessionId }),
+          })
+          const payload = await response.json().catch(() => null)
+          if (!response.ok || payload?.ok !== true) throw new Error(payload?.error ?? `HTTP ${response.status}`)
+          if (payload.overview !== undefined) {
+            window.dispatchEvent(new CustomEvent('dsh-bc-overview', { detail: payload.overview }))
+          }
+          if (options.select === true && typeof sessionId === 'string') {
+            setSelectedId(sessionId)
+            setView('single')
+            setMode('preview')
+          }
+          return payload
+        } catch (error) {
+          setNotice(error instanceof Error ? error.message : String(error))
+          return null
+        } finally {
+          setOverviewBusy(null)
+        }
+      }
+
+      const openSingle = (sessionId) => {
+        if (sessionId === null || sessionId === undefined) return
+        setSelectedId(sessionId)
+        setView('single')
+        setMode('preview')
+        setMenuId(null)
+        setErrorOpen(false)
+      }
+
+      const backToGrid = () => {
+        setView('grid')
+        setMode('preview')
+        setMenuId(null)
+        setErrorOpen(false)
+      }
+
+      const newBrowser = () => {
+        const target = props.sessionId ?? activeId
+        if (target === null || target === undefined) {
+          setNotice(t('v16.noSession'))
+          return
+        }
+        void overviewAct('open', target, { select: true })
+      }
+
+      const focusLive = async () => {
+        if (selected === null) return
+        const payload = await overviewAct('focus', selected.sessionId)
+        if (payload !== null) {
+          setSelectedId(selected.sessionId)
+          setView('single')
+          setMode('live')
+        }
+      }
+
+      const openInRight = () => {
+        setMenuId(null)
+        if (typeof props.onOpenRight === 'function') props.onOpenRight()
+      }
+
+      const copyAddress = async (entry = selected) => {
+        setMenuId(null)
+        if (entry === null || typeof entry.url !== 'string' || entry.url === '') return
+        try {
+          await navigator.clipboard.writeText(entry.url)
+        } catch {
+          setNotice(entry.url)
+        }
+      }
+
+      const closeSession = async (entry = selected) => {
+        if (entry === null) return
+        if (closeArmedId !== entry.sessionId) {
+          setCloseArmedId(entry.sessionId)
+          return
+        }
+        setCloseArmedId(null)
+        setMenuId(null)
+        await overviewAct('close', entry.sessionId)
+        if (selectedId === entry.sessionId) {
+          setMode('preview')
+          setView('grid')
+        }
+      }
+
+      const toggleRail = () => {
+        if (panelWidth > 0 && panelWidth < 1100) return
+        const next = !railPref
+        setRailPref(next)
+        writePanelPreference('dsh.browser-cockpit.rail', next ? 'open' : 'closed')
+      }
+
+      const statusDot = (entry) => h('span', {
+        className: `dsh-bc-dot${entry?.running === true ? ' is-running' : entry?.phase === 'crashed' || entry?.phase === 'failed' ? ' is-failed' : ''}`.trim(),
+        'aria-hidden': true,
+      })
+
+      const errorPanel = h('div', { className: 'dsh-bc16-errors', role: 'dialog', 'aria-label': t('v16.errors') },
+        errorSessions.length === 0
+          ? h('div', { className: 'dsh-bc16-error-empty' }, t('v16.errorEmpty'))
+          : errorSessions.flatMap((entry) => (entry.recentErrors ?? []).map((line, index) => h('div', { className: 'dsh-bc16-error-line', key: `${entry.sessionId}-${index}` },
+            h('div', { className: 'dsh-bc16-error-session' }, entry.title || entry.sessionId.slice(-6)),
+            typeof line === 'string' ? line : String(line?.text ?? line),
+          ))),
+      )
+
+      const rail = railOpen
+        ? h('aside', { className: 'dsh-bc16-rail', 'aria-label': t('v16.log') },
+            h('div', { className: 'dsh-bc16-rail-head' },
+              h('span', null, `${t('v16.log')} · ${selectedActivity.length}`),
+              selectedCurrent === null ? null : h('span', { className: 'dsh-bc16-sub' }, t('activity.now', { label: activityLabel(t, selectedCurrent) })),
+            ),
+            h('div', { className: 'dsh-bc16-rail-list' },
+              selectedActivity.length === 0
+                ? h('div', { className: 'dsh-bc16-empty-body', style: { padding: '8px 0' } }, t('v16.logEmpty'))
+                : selectedActivity.map((entry) => {
+                    const label = activityLabel(t, entry)
+                    const source = entry.source === 'human' ? t('activity.you') : t('activity.agent')
+                    const pageName = entry.page !== null && entry.page !== undefined && typeof entry.page === 'object'
+                      ? (entry.page.title !== '' ? entry.page.title : shorten(entry.page.url, 40))
+                      : ''
+                    return h('div', { className: 'dsh-bc16-log', key: entry.id },
+                      entry.hasThumb === true
+                        ? h('div', { className: 'dsh-bc16-log-thumb' }, h('img', { src: `${BASE}thumb/${entry.id}`, alt: label, loading: 'lazy' }))
+                        : null,
+                      h('div', { className: 'dsh-bc16-log-body' },
+                        h('div', { className: 'dsh-bc16-log-time' }, formatClock(entry.at)),
+                        h('div', { className: 'dsh-bc16-log-label', title: label }, label),
+                        h('div', { className: 'dsh-bc16-log-sub' }, pageName === '' ? source : `${source} · ${shorten(pageName, 26)}`),
+                        entry.status === 'error' && typeof entry.error === 'string' && entry.error !== ''
+                          ? h('div', { className: 'dsh-bc16-log-error' }, shorten(entry.error, 120))
+                          : null,
+                      ),
+                    )
+                  }),
+            ),
+          )
+        : null
+
+      const tileWidth = (() => {
+        let columns = overviewSessions.length <= 2 ? Math.max(1, overviewSessions.length) : overviewSessions.length <= 4 ? 2 : 3
+        if (panelWidth > 0) {
+          columns = Math.min(columns, panelWidth < 760 ? 1 : panelWidth < 1050 ? 2 : 3)
+        }
+        columns = Math.max(1, columns)
+        return `calc((100% - ${(columns - 1) * 14}px) / ${columns})`
+      })()
+
+      const renderTile = (entry) => {
+        const label = typeof entry.title === 'string' && entry.title !== '' ? entry.title : `Session ${entry.sessionId.slice(-6)}`
+        const frame = overviewFeed.frames[entry.sessionId]
+        const menu = menuId === entry.sessionId
+        const errors = Number(entry.errorCount ?? 0)
+        return h('div', {
+          key: entry.sessionId,
+          className: `dsh-bc16-tile${entry.active ? ' is-active' : ''}${menu ? ' is-menu' : ''}`.trim(),
+          style: { width: tileWidth },
+          role: 'button',
+          tabIndex: 0,
+          'aria-label': `${label} — ${entry.url || ''}`,
+          onClick: () => openSingle(entry.sessionId),
+          onKeyDown: (event) => {
+            if (event.key === 'Enter' || event.key === ' ') {
+              event.preventDefault()
+              openSingle(entry.sessionId)
+            }
+          },
+        },
+        h('div', { className: 'dsh-bc16-tile-media' },
+          frame !== undefined
+            ? h('img', { className: 'dsh-bc16-tile-frame', src: frame, alt: '', draggable: false })
+            : h('div', { className: 'dsh-bc16-tile-empty' }, t('overview.noFrame')),
+          h('div', { className: 'dsh-bc16-tile-shade' }),
+          h('div', { className: 'dsh-bc16-tile-top' },
+            statusDot(entry),
+            errors > 0
+              ? h('button', {
+                  className: 'dsh-bc16-tile-error',
+                  type: 'button',
+                  'aria-label': `${errors} ${t('v16.errors')}`,
+                  onClick: (event) => { event.stopPropagation(); setSelectedId(entry.sessionId); setErrorOpen(true) },
+                }, `⚠ ${errors}`)
+              : null,
+            h('span', { className: `dsh-bc16-tile-badge${entry.active ? ' is-active' : ''}`.trim() }, entry.active ? t('overview.active') : t('overview.inactive')),
+            h('button', {
+              className: 'dsh-bc16-icon',
+              type: 'button',
+              'aria-label': t('v16.menu'),
+              'aria-expanded': menu,
+              onClick: (event) => { event.stopPropagation(); setMenuId(menu ? null : entry.sessionId) },
+            }, '⋯'),
+          ),
+          h('div', { className: 'dsh-bc16-tile-bottom' },
+            h('div', { className: 'dsh-bc16-tile-title', title: label }, label),
+            h('div', { className: 'dsh-bc16-tile-url', title: entry.url || '' }, entry.url || 'about:blank'),
+          ),
+        ),
+        menu
+          ? h('div', { className: 'dsh-bc16-menu', role: 'menu', onClick: (event) => event.stopPropagation() },
+              h('button', { type: 'button', role: 'menuitem', onClick: () => openSingle(entry.sessionId) }, t('v16.zoom')),
+              typeof props.onOpenRight === 'function'
+                ? h('button', { type: 'button', role: 'menuitem', onClick: openInRight }, t('v16.openRight'))
+                : null,
+              h('button', { type: 'button', role: 'menuitem', onClick: () => void copyAddress(entry) }, t('v16.copyUrl')),
+              h('button', { type: 'button', role: 'menuitem', className: 'is-danger', title: t('v16.confirmClose'), onClick: () => void closeSession(entry) }, closeArmedId === entry.sessionId ? t('v16.confirmCloseShort') : t('v16.closeSession')),
+            )
+          : null,
+        )
+      }
+
+      const toolbar = h('div', { className: 'dsh-bc16-toolbar' },
+        h('div', { className: 'dsh-bc16-toolbar-main' },
+          single
+            ? h('button', {
+                className: 'dsh-bc16-icon',
+                type: 'button',
+                'aria-label': t('v16.back'),
+                title: t('v16.back'),
+                disabled: overviewSessions.length <= 1,
+                onClick: backToGrid,
+              }, '‹')
+            : h('span', { className: 'dsh-bc16-icon', 'aria-hidden': true }, '▦'),
+          single && selected !== null ? statusDot(selected) : null,
+          single && selected !== null
+            ? h('span', { className: 'dsh-bc16-title', title: selected.title || selected.url || '' }, selected.title || selected.url || t('v16.preview'))
+            : null,
+          h('span', { className: 'dsh-bc16-stat' },
+            single && selected !== null
+              ? `${t(mode === 'live' ? 'v16.live' : 'v16.preview')}${displayAt === 0 ? '' : ` · ${ageLabel(displayAt)}`}`
+              : t('v16.summary', { count: overviewSessions.length, running: runningCount }),
+          ),
+        ),
+        h('div', { className: 'dsh-bc16-toolbar-side' },
+          single && mode === 'preview'
+            ? h('button', {
+                className: 'dsh-bc16-btn is-live',
+                type: 'button',
+                disabled: selected === null || overviewBusy !== null,
+                title: t('v16.liveHint'),
+                onClick: () => void focusLive(),
+              }, t('v16.live'))
+            : null,
+          single && mode === 'live'
+            ? h('button', { className: 'dsh-bc16-btn', type: 'button', onClick: () => setMode('preview') }, t('v16.preview'))
+            : null,
+          totalErrors > 0
+            ? h('button', {
+                className: 'dsh-bc16-btn',
+                type: 'button',
+                style: { color: 'var(--dsw-alias-state-error-primary)' },
+                'aria-expanded': errorOpen,
+                onClick: () => setErrorOpen((value) => !value),
+              }, `⚠ ${totalErrors}`)
+            : null,
+          single
+            ? h('button', {
+                className: 'dsh-bc16-icon',
+                type: 'button',
+                disabled: panelWidth > 0 && panelWidth < 1100,
+                'aria-label': railOpen ? t('v16.railHide') : t('v16.railShow'),
+                'aria-pressed': railOpen,
+                title: panelWidth > 0 && panelWidth < 1100 ? t('v16.railShow') : (railOpen ? t('v16.railHide') : t('v16.railShow')),
+                onClick: toggleRail,
+              }, '▤')
+            : null,
+          !single
+            ? h('button', {
+                className: 'dsh-bc16-icon',
+                type: 'button',
+                'aria-label': t('v16.new'),
+                title: t('v16.new'),
+                disabled: (props.sessionId ?? activeId) === null || (props.sessionId ?? activeId) === undefined,
+                onClick: newBrowser,
+              }, '+')
+            : null,
+          single
+            ? h('button', {
+                className: 'dsh-bc16-icon',
+                type: 'button',
+                'aria-label': t('v16.menu'),
+                'aria-expanded': menuId === 'panel',
+                onClick: () => setMenuId(menuId === 'panel' ? null : 'panel'),
+              }, '⋯')
+            : null,
+          single && menuId === 'panel'
+            ? h('div', { className: 'dsh-bc16-menu', role: 'menu' },
+                typeof props.onOpenRight === 'function'
+                  ? h('button', { type: 'button', role: 'menuitem', onClick: openInRight }, t('v16.openRight'))
+                  : null,
+                h('button', { type: 'button', role: 'menuitem', onClick: () => void copyAddress(selected) }, t('v16.copyUrl')),
+                h('button', { type: 'button', role: 'menuitem', className: 'is-danger', title: t('v16.confirmClose'), onClick: () => void closeSession(selected) }, closeArmedId === selected?.sessionId ? t('v16.confirmCloseShort') : t('v16.closeSession')),
+              )
+            : null,
+          errorOpen ? errorPanel : null,
+        ),
+      )
+
+      const empty = h('div', { className: 'dsh-bc16-empty' },
+        h('div', { className: 'dsh-bc16-empty-title' }, t('v16.emptyTitle')),
+        h('div', { className: 'dsh-bc16-empty-body' }, t('v16.emptyBody')),
+        h('button', { className: 'dsh-bc16-btn is-live', type: 'button', onClick: newBrowser }, t('v16.emptyCta')),
+      )
+
+      const body = overviewSessions.length === 0
+        ? h('div', { className: 'dsh-bc16-body' }, empty)
+        : single && selected !== null
+          ? h('div', { className: 'dsh-bc16-body' },
+              h('div', { className: 'dsh-bc16-stage' },
+                h('div', { className: 'dsh-bc16-canvas' },
+                  displayFrame !== null
+                    ? h('img', {
+                        src: displayFrame,
+                        alt: `${selected.title || selected.url || t('v16.preview')}`,
+                        draggable: false,
+                      })
+                    : h('div', { className: 'dsh-bc16-canvas-center' },
+                        preview.failed ? t('v16.errorEmpty') : selected.phase === 'stopped' ? t('status.stopped') : t('overview.noFrame'),
+                      ),
+                  h('div', { className: 'dsh-bc16-live-chip' }, mode === 'live' ? t('v16.live') : t('v16.preview')),
+                ),
+                h('div', { className: 'dsh-bc16-foot' },
+                  h('span', null, 'URL ', h('code', null, selected.url || 'about:blank')),
+                  h('span', null, t('meta.title'), ' ', h('code', null, selected.title || '—')),
+                  h('span', null, `${selected.width ?? 0}×${selected.height ?? 0}`),
+                  h('span', null, t('v16.readonly')),
+                ),
+              ),
+              rail,
+            )
+          : h('div', { className: 'dsh-bc16-body' },
+              h('div', { className: 'dsh-bc16-grid-wrap' },
+                h('div', { className: 'dsh-bc16-grid' }, overviewSessions.map(renderTile)),
+              ),
+            )
+
+      return h('div', { className: 'dsh-bc-page dsh-bc-v16', ref: pageRef },
+        h('style', null, CSS + V16_CSS),
+        h('div', { className: 'dsh-bc16' },
+          toolbar,
+          notice === null ? null : h('div', { className: 'dsh-bc16-notice', role: 'alert' },
+            h('span', null, notice),
+            h('button', { type: 'button', 'aria-label': t('notice.dismiss'), onClick: () => setNotice(null) }, '×'),
+          ),
+          body,
+        ),
+      )
+    }
+
     return {
       inject: ['slots', 'locale'],
       apply(ctx) {
@@ -1530,8 +2172,8 @@ window.__ModuleLoader__.load({
           name: 'main',
           key: PANEL_ID,
           locale: NS,
-          inject: () => ({ onOpenRight: () => openBrowserTab(ctx) }),
-        }, BrowserPanel))
+          inject: (sessionId) => ({ sessionId, onOpenRight: () => openBrowserTab(ctx, sessionId) }),
+        }, BrowserPanelV16))
 
         ctx.inject(['sidebarRightTabs', 'sidebarRight', 'layout'], (scope) => {
           scope.effect(() => scope.sidebarRightTabs.register({
