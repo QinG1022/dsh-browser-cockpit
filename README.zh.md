@@ -19,7 +19,7 @@
 - **稳定定位**：快照坐标、深度/节点上限，以及 `role=button[name="保存"]`、`text=保存`、`label=邮箱`、`testid=search` 定位；`browser_assert` 做确定性检查。
 - **可执行的失败**：工具报错末尾带 `Next:` 建议——ref 过期就重新快照、匹配多个就收窄定位、导航被挡就检查 `allowedHosts`/`allowFileUrls`、超时就调超时或看控制台/网络。
 - **输出有上限**：快照行数/节点数上限、`browser_eval` 默认 6k 字符、网络响应体截断、控制台/脚本结果带截断标记，避免大对象淹没对话。
-- **实时画面**：右侧栏与对话并排，优先走 SSE 推流，失败时回退到 JPEG 轮询。
+- **实时画面**：右侧栏与对话并排，优先走 SSE 推流，失败时回退到 JPEG 轮询；帧率合并到约 8 fps，静态页面不会把 Host 刷爆。
 - **会话总览**：宽版「浏览器」面板会变成实时卡片网格，只展示已经打开浏览器的会话；每张卡有标题、实时缩略图、聚焦和关闭操作，最多 6 个。
 - **按会话隔离上下文**：每个会话拥有独立的 Chrome browser context，Cookie、localStorage 和缓存互不影响，可以同时登录两个账号而不互相踢下线。右侧栏和胶囊仍只看当前会话。
 - **操作记录**：每一步的时间、耗时、结果、页面、新增报错，并附可放大的缩略图。
@@ -107,7 +107,7 @@ pnpm dev          # 终端会打印地址，例如 http://localhost:5173
 | `browser_scroll` | 滚动页面，或把元素滚入视野。 |
 | `browser_highlight` | 在元素外画一个带标签的覆盖层，让人看清智能体指的是哪里；`durationMs: 0` 会一直保留，`clear: true` 清除所有覆盖层。 |
 | `browser_eval` | 在页面里执行 JavaScript 并返回 JSON 值。 |
-| `browser_console` | 最近的控制台消息、未捕获异常和失败请求，带来源 URL、行、列和调用栈。 |
+| `browser_console` | 最近的控制台消息、未捕获异常和失败请求，带来源 URL、行、列和调用栈。两秒内完全相同的消息会合并。 |
 | `browser_assert` | 确定性检查：文本可见/隐藏、元素可见/隐藏、值、勾选、URL、标题或元素数量。返回 `PASS`/`FAIL` 和期望/实际值；条件不成立是正常结果，不当作工具错误。 |
 | `browser_network` | 列出请求（状态、类型、耗时、大小、URL），查看单条请求的打码请求/响应头和有限长度的响应体。 |
 | `browser_route` | 模拟、延迟或失败匹配的 HTTP 请求；列出和清除规则。 |
@@ -116,7 +116,7 @@ pnpm dev          # 终端会打印地址，例如 http://localhost:5173
 | `browser_download` | 列出页面触发的下载，等待完成并返回保存路径。 |
 | `browser_styles` | 读取一个元素的计算样式和匹配的 CSS 规则，可按属性过滤。 |
 | `browser_emulate` | 模拟配色方案、减少动效、移动/触摸、CPU 降速、离线/慢网、时区和地理位置；`clear` 恢复。 |
-| `browser_performance` | 轻量读取 LCP、CLS、近似 INP、长任务、导航耗时、资源数和 Chrome 运行时指标。 |
+| `browser_performance` | 轻量读取 LCP、CLS、近似 INP、长任务、导航耗时、资源数和 Chrome 运行时指标。Chrome 无法在该页测量的指标显示为“未测量”，不会伪装成 0。 |
 | `browser_screenshot` | 截取视口、整页，或按 target/ref/selector 截取单个元素。 |
 | `browser_resize` | 切换视口尺寸（320–3840 × 240–2160）。 |
 | `browser_close` | 关闭当前会话的浏览器页面；其他会话的上下文不受影响，下次工具调用会重新为当前会话开一个页面。 |
@@ -191,7 +191,7 @@ pnpm dev          # 终端会打印地址，例如 http://localhost:5173
 - 快照引用只在生成它的快照内有效；导航或 DOM 大幅变化后要重新快照。`role=`、`text=`、`label=`、`testid=` 定位比引用更耐小改动。
 - `browser_assert` 会轮询到超时（默认 3 秒）；条件不成立时返回 `FAIL`，不抛异常。
 - CSS 检查覆盖元素的计算样式和匹配规则，不进入 closed shadow DOM 或伪元素内部。
-- 性能数字来自浏览器，属于近似值；INP 需要真实交互，LCP 需要加载，页面稳定后再读。
+- 性能数字来自浏览器，属于近似值；INP 需要真实交互，LCP 需要加载，页面稳定后再读。LCP/CLS/INP/长任务现在由缓冲的 PerformanceObserver 采集；页面或浏览器无法提供时字段为 `null`，文字显示“未测量”。
 - 拖拽使用鼠标按键事件；原生 HTML5 drag-and-drop 可能不会触发 drag 事件。
 - Chrome 原生 `<select>` 弹层和系统对话框不在页面里，无法驱动。JavaScript alert/confirm/prompt 已处理：默认取消，`dialogBehavior: accept` 接受，`manual` 时用 `browser_handle_dialog` 回答。
 - 右侧栏标签只在对话视图显示；切到其他主面板时右栏隐藏（回来后会恢复）。

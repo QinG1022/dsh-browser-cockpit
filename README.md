@@ -19,7 +19,7 @@ Agents are good at reading source code and bad at seeing a running interface. Th
 - **Stable targeting**: snapshot boxes, depth limits, and locators such as `role=button[name="Save"]`, `text=Save`, `label=Email`, `testid=search`, plus deterministic `browser_assert` checks.
 - **Actionable failures**: a failed tool call ends with a `Next:` suggestion — fresh snapshot for stale refs, a narrower locator, `allowFileUrls`/`allowedHosts`, a dialog handler, a timeout change, or `browser_console`/`browser_network` for the cause.
 - **Bounded output**: snapshot line/node caps, a 6k-character default for `browser_eval`, truncated network bodies, and console/eval markers instead of dumping huge values into the conversation.
-- **Live view** in the right sidebar, side by side with the conversation, streamed over SSE with a JPEG polling fallback.
+- **Live view** in the right sidebar, side by side with the conversation, streamed over SSE with a JPEG polling fallback; frames are coalesced to about 8 fps so a static page cannot flood the Host.
 - **Session overview**: the wide Browser panel becomes a live grid of every conversation that has a browser open, with one card per session, a live thumbnail, focus and close actions. Cards are capped at six; only open browsers appear.
 - **Per-session isolation**: each conversation gets its own Chrome browser context — cookies, localStorage and cache are separate, so two accounts can be tested at once without logging each other out. The right tab and pill still show only this session.
 - **Activity log** — every action with its time, duration, result, page, new page errors, and a thumbnail you can enlarge.
@@ -107,7 +107,7 @@ Closing the right tab is remembered for that session, so it will not pop open ag
 | `browser_scroll` | Scroll the page or bring an element into view. |
 | `browser_highlight` | Draw a labeled overlay around an element so a human can see what the agent means; `durationMs: 0` keeps it, and `clear: true` removes every overlay. |
 | `browser_eval` | Evaluate JavaScript in the page and return the JSON value. |
-| `browser_console` | Recent console messages, uncaught errors, and failed requests, with source URL, line, column, and stack. |
+| `browser_console` | Recent console messages, uncaught errors, and failed requests, with source URL, line, column, and stack. Repeats of the same message within two seconds are collapsed. |
 | `browser_assert` | Deterministic checks: text visible/hidden, element visible/hidden, value, checked, URL, title, or element count. Returns `PASS`/`FAIL` with expected and actual values; a false check is a normal result, not a tool error. |
 | `browser_network` | List requests (status, type, duration, size, URL) and inspect one request's redacted headers and bounded response body. |
 | `browser_route` | Mock, delay, or fail matching HTTP requests; list and clear routes. |
@@ -116,7 +116,7 @@ Closing the right tab is remembered for that session, so it will not pop open ag
 | `browser_download` | List downloads triggered by the page and wait for one to complete, with its saved path. |
 | `browser_styles` | Read computed styles and matched CSS rules for one element, with an optional property filter. |
 | `browser_emulate` | Emulate color scheme, reduced motion, mobile/touch, CPU slowdown, offline/slow networks, timezone, and geolocation; `clear` restores normal. |
-| `browser_performance` | Lightweight LCP, CLS, approximate INP, long tasks, navigation timing, resource count, and Chrome runtime metrics. |
+| `browser_performance` | Lightweight LCP, CLS, approximate INP, long tasks, navigation timing, resource count, and Chrome runtime metrics. Metrics Chrome cannot measure on the page are reported as “not measured”, never as zero. |
 | `browser_screenshot` | Capture the viewport, the whole page, or one element by target/ref/selector. |
 | `browser_resize` | Change the viewport size (320–3840 × 240–2160). |
 | `browser_close` | Close this conversation's browser page. Other conversations keep their contexts; the next browser tool here starts a fresh page. |
@@ -191,7 +191,7 @@ Environment fallbacks: `DSH_BROWSER_PATH` and `DSH_BROWSER_PROFILE`.
 - New tabs opened by the current page are followed by default; set `followNewTabs: false` to stay put.
 - Same-origin iframe and open-shadow-DOM elements are included in snapshots and targeting. Cross-origin/OOPIF iframes and closed shadow roots are not inspectable.
 - CSS inspection covers the element's computed style and matched rules; it does not walk into closed shadow DOM or pseudo-element internals.
-- Performance numbers are browser-reported and approximate; INP needs real interaction and LCP needs a load, so read them after the page settles.
+- Performance numbers are browser-reported and approximate; INP needs real interaction and LCP needs a load, so read them after the page settles. LCP/CLS/INP/long tasks now come from buffered PerformanceObservers; if the page or browser cannot supply them, the field is `null` and the text reads “not measured”.
 - Drag is a mouse-button drag; native HTML5 drag-and-drop may not fire drag events.
 - Chrome's native `<select>` popups and OS dialogs are outside the page and cannot be driven. JavaScript alert/confirm/prompt are handled: dismissed by default, accepted with `dialogBehavior: accept`, or answered with `browser_handle_dialog` under `manual`.
 - The right tab only renders in the conversation view; switching to another main panel hides the right column (the pill returns when you are back).
